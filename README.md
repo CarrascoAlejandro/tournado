@@ -1,64 +1,57 @@
-<div align="center"><strong>Next.js 14 Admin Dashboard Template</strong></div>
-<div align="center">Built with the Next.js App Router</div>
-<br />
-<div align="center">
-<a href="https://next-admin-dash.vercel.app/">Demo</a>
-<span> · </span>
-<a href="https://vercel.com/templates/next.js/admin-dashboard-tailwind-postgres-react-nextjs">Clone & Deploy</a>
-<span>
-</div>
+# Tournado
 
-## Overview
+## Instrucciones para levantar
 
-This is a starter template using the following stack:
+1. Dependencias globales
 
-- Framework - [Next.js (App Router)](https://nextjs.org)
-- Language - [TypeScript](https://www.typescriptlang.org)
-- Auth - [Auth.js](https://authjs.dev)
-- Database - [Postgres](https://vercel.com/postgres)
-- Deployment - [Vercel](https://vercel.com/docs/concepts/next.js/overview)
-- Styling - [Tailwind CSS](https://tailwindcss.com)
-- Components - [Shadcn UI](https://ui.shadcn.com/)
-- Analytics - [Vercel Analytics](https://vercel.com/analytics)
-- Formatting - [Prettier](https://prettier.io)
+Este proyecto fue desarrollado con nextJs, por lo que para levantarlo es necesario tener instalado nodeJs y **pnpm**.
 
-This template uses the new Next.js App Router. This includes support for enhanced layouts, colocation of components, tests, and styles, component-level data fetching, and more.
-
-## Getting Started
-
-During the deployment, Vercel will prompt you to create a new Postgres database. This will add the necessary environment variables to your project.
-
-Inside the Vercel Postgres dashboard, create a table based on the schema defined in this repository.
-
-```
-CREATE TYPE status AS ENUM ('active', 'inactive', 'archived');
-
-CREATE TABLE products (
-  id SERIAL PRIMARY KEY,
-  image_url TEXT NOT NULL,
-  name TEXT NOT NULL,
-  status status NOT NULL,
-  price NUMERIC(10, 2) NOT NULL,
-  stock INTEGER NOT NULL,
-  available_at TIMESTAMP NOT NULL
-);
+```bash
+npm i -g pnpm
 ```
 
-Then, uncomment `app/api/seed.ts` and hit `http://localhost:3000/api/seed` to seed the database with products.
+2. Vercel
 
-Next, copy the `.env.example` file to `.env` and update the values. Follow the instructions in the `.env.example` file to set up your GitHub OAuth application.
+Este proyecto fue desplegado en Vercel, aunque de momento solo yo tengo acceso a la configuración del proyecto, por lo que si deseas levantarlo en tu máquina local, necesitarás instalar Vercel CLI.
 
 ```bash
 npm i -g vercel
-vercel link
-vercel env pull
 ```
 
-Finally, run the following commands to start the development server:
+3. configuración del environment
 
-```
+Este proyecto utiliza variables de entorno, por lo que es necesario crear un archivo `.env` en la raíz del proyecto con las siguientes variables:
+
+```bash
+POSTGRES_URL="**********"
+POSTGRES_PRISMA_URL="**********"
+POSTGRES_URL_NO_SSL="**********"
+POSTGRES_URL_NON_POOLING="**********"
+POSTGRES_USER="default"
+POSTGRES_HOST="************"
+POSTGRES_PASSWORD="**********"
+POSTGRES_DATABASE="******************"
+
+NEXTAUTH_URL=http://localhost:3000
+AUTH_SECRET=**********
+
+# https://authjs.dev/getting-started/providers/github
+AUTH_GITHUB_ID=**********
+AUTH_GITHUB_SECRET=**********
+```	
+
+Para usar la base de datos compartida escribeme para que te proporcione las variables de entorno. Sino puedes usar tu propia base de datos.
+
+4. Levantar el proyecto
+
+Antes no olvides verificar que tengas todas las dependencias instaladas con el siguiente comando:
+
+```bash
 pnpm install
+```
+
+El proyecto se puede levantar con el siguiente comando:
+
+```bash
 pnpm dev
 ```
-
-You should now be able to access the application at http://localhost:3000.
