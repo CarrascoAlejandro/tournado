@@ -16,13 +16,29 @@ import { createInsertSchema } from 'drizzle-zod';
 
 export const db = drizzle(neon(process.env.POSTGRES_URL!));
 
+// Tabla de usuarios
+export const users = pgTable('user_testing', {
+  email: text('email').primaryKey().notNull(),
+  username: text('username').notNull()
+});
+
+// Aquí puedes agregar otras tablas como tournaments, participants, etc.
+
+export async function insertUser(email: string, username: string) {
+  try {
+    await db.insert(users).values({ email, username }); // Cambia 'mail' por 'email'
+    console.log(`Usuario ${username} insertado con éxito`);
+  } catch (error) {
+    console.error("Error al insertar usuario:", error);
+    throw error; // Propagar el error para manejarlo más arriba si es necesario
+  }
+}
+
+
+
 export const statusEnum = pgEnum('status', ['en curso', 'proximamente', 'finalizado']); // Se refiere a los estados posibles de un torneo
 
-export const users = pgTable('user', {
-  id: serial('id').primaryKey(),
-  username: text('username').notNull(),
-  mail: text('mail').notNull()
-});
+
 
 export const tournaments = pgTable('tournament', {
   tournamentId: serial('tournament_id').primaryKey(),

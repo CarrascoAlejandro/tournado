@@ -15,6 +15,9 @@ export async function User() {
   let session = await auth();
   let user = session?.user;
 
+  // Log para mostrar toda la información del usuario
+  console.log("User session info:", session);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
