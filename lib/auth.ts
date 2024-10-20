@@ -1,7 +1,7 @@
 import NextAuth from 'next-auth';
 import GitHubProvider from 'next-auth/providers/github';
 import GoogleProvider from 'next-auth/providers/google';
-import { db, insertUser } from '@/lib/db'; // Asegúrate de importar la función insertUser
+import { db, insertUser, userExists } from '@/lib/db'; // Asegúrate de importar las funciones insertUser y userExists
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -25,15 +25,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session;
     },
     async jwt({ token, account, user, profile }) {
-      // En el JWT almacenamos datos adicionales del perfil del usuario
       if (user) {
         token.id = user.id;
         token.email = user.email!;
         token.name = user.name!;
         token.picture = user.image;
+        token.isNewUser = false;
 
-        // Almacenar usuario en bdd:
-        await insertUser(token.email, token.name); // Llama a la función insertUser
+        const exists = await userExists(token.email);
+
+        if (!exists) {
+          await insertUser(token.email, token.name);
+          token.isNewUser = true;
+
+        } else {
+          console.log("User already exists");
+        }
       }
       
       console.log("JWT token info:", token);

@@ -9,7 +9,9 @@ import {
   integer,
   timestamp,
   pgEnum,
-  serial
+  serial,
+  boolean,
+  date
 } from 'drizzle-orm/pg-core';
 import { count, eq, ilike } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
@@ -17,24 +19,70 @@ import { createInsertSchema } from 'drizzle-zod';
 export const db = drizzle(neon(process.env.POSTGRES_URL!));
 
 // Tabla de usuarios
-export const users = pgTable('user_testing', {
-  email: text('email').primaryKey().notNull(),
-  username: text('username').notNull()
+export const users = pgTable('user', {
+  mail: text('mail').primaryKey().notNull(),
+  username: text('username').notNull(),
+  createdAt: date('created_at').notNull(), // Cambia esto si decides utilizar otro tipo
+  active: boolean('active').notNull(),
 });
 
-// Aquí puedes agregar otras tablas como tournaments, participants, etc.
-
-export async function insertUser(email: string, username: string) {
+// Función para insertar un nuevo usuario
+export async function insertUser(mail: string, username: string) {
   try {
-    await db.insert(users).values({ email, username }); // Cambia 'mail' por 'email'
+    await db.insert(users).values({ mail, username, createdAt: new Date().toISOString(), active: true });
     console.log(`Usuario ${username} insertado con éxito`);
   } catch (error) {
     console.error("Error al insertar usuario:", error);
-    throw error; // Propagar el error para manejarlo más arriba si es necesario
+    throw error;
   }
 }
 
+// Verificar si un usuario existe
+export async function userExists(mail: string) {
+  try {
+    const user = await db
+      .select()
+      .from(users)
+      .where(eq(users.mail, mail))
+      .limit(1);
 
+    return user.length > 0;
+  } catch (error) {
+    console.error("Error al buscar usuario:", error);
+    throw error;
+  }
+}
+
+// Obtener toda la información del usuario por correo
+export async function getUserByEmail(mail: string) {
+  try {
+    const user = await db
+      .select()
+      .from(users)
+      .where(eq(users.mail, mail))
+      .limit(1);
+
+    return user.length > 0 ? user[0] : null;
+  } catch (error) {
+    console.error("Error al obtener usuario:", error);
+    throw error;
+  }
+}
+
+// Desactivar un usuario
+export async function deactivateUser(mail: string) {
+  try {
+    await db
+      .update(users)
+      .set({ active: false })
+      .where(eq(users.mail, mail));
+
+    console.log(`Usuario con correo ${mail} desactivado.`);
+  } catch (error) {
+    console.error("Error al desactivar usuario:", error);
+    throw error;
+  }
+}
 
 export const statusEnum = pgEnum('status', ['en curso', 'proximamente', 'finalizado']); // Se refiere a los estados posibles de un torneo
 
