@@ -25,10 +25,10 @@ export default function LoginPage() {
         </div>
         <CardHeader className="text-center">
           <CardTitle className="text-4xl font-extrabold text-gray-800 mb-2">
-            ¡Bienvenido de nuevo!
+            Welcome Back!
           </CardTitle>
           <CardDescription className="text-gray-600 text-sm">
-            Inicia sesión utilizando tu plataforma preferida
+            Sign in using your preferred platform
           </CardDescription>
         </CardHeader>
         <CardFooter className="flex flex-col gap-4 p-8">
@@ -47,7 +47,7 @@ export default function LoginPage() {
               size="lg"
             >
               <FaGoogle className="text-2xl" />
-              Iniciar sesión con Google
+              Sign in with Google
             </Button>
           </form>
 
@@ -66,12 +66,12 @@ export default function LoginPage() {
               size="lg"
             >
               <FaGithub className="text-2xl" />
-              Iniciar sesión con GitHub
+              Sign in with GitHub
             </Button>
           </form>
 
           <p className="text-center text-gray-500 text-xs mt-4">
-            Al iniciar sesión, aceptas nuestros <a href="#" className="underline text-indigo-600 hover:text-indigo-800">Términos de Servicio</a> y nuestra <a href="#" className="underline text-indigo-600 hover:text-indigo-800">Política de Privacidad</a>.
+            By signing in, you agree to our <a href="#" className="underline text-indigo-600 hover:text-indigo-800">Terms of Service</a> and <a href="#" className="underline text-indigo-600 hover:text-indigo-800">Privacy Policy</a>.
           </p>
         </CardFooter>
       </Card>
