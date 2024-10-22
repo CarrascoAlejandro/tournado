@@ -3,6 +3,7 @@ GET http://localhost:3000/api/dev/tournament
 ###
 POST http://localhost:3000/api/dev/tournament
 Content-Type: application/json
+Accept: application/json
 
 {
     "tournamentCode": "ABCD1234",

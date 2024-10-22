@@ -25,7 +25,7 @@ type Tournament = {
   endDate: string | null;
   nMaxParticipants: number;
   tags: string;
-  userId: number;
+  userId: string;
 };
 
 const TournamentsPage: React.FC = () => {
@@ -34,12 +34,13 @@ const TournamentsPage: React.FC = () => {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false); 
   const [formData, setFormData] = useState({
+    tournamentCode:'',
     tournamentName: '',
     status: '',
     startDate: '',
     endDate: '',
     nMaxParticipants: 0,
-    tags: '',
+    tags: ''
   });
 
   useEffect(() => {
@@ -55,6 +56,29 @@ const TournamentsPage: React.FC = () => {
 
     fetchTournaments();
   }, []);
+
+  const handleSubmitTournament = async () => {
+    try {
+      const response = await fetch('/api/dev/tournament', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData), // Enviamos los datos del formulario
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Torneo creado exitosamente:', data);
+        // Aquí puedes manejar el cierre del modal o mostrar un mensaje de éxito
+        setIsCreateModalOpen(false);
+      } else {
+        console.error('Error al crear el torneo');
+      }
+    } catch (error) {
+      console.error('Error en la solicitud:', error);
+    }
+  };
 
   const openModal = (tournament: Tournament) => {
     setSelectedTournament(tournament);
@@ -74,12 +98,13 @@ const TournamentsPage: React.FC = () => {
   const closeCreateModal = () => {
     setIsCreateModalOpen(false);
     setFormData({
+      tournamentCode: '',
       tournamentName: '',
       status: '',
       startDate: '',
       endDate: '',
       nMaxParticipants: 0,
-      tags: '',
+      tags: ''
     });
   };
 
@@ -147,32 +172,32 @@ const TournamentsPage: React.FC = () => {
       />
 
       {/* Nuevo Modal para crear un torneo */}
-      <Modal isOpen={isCreateModalOpen} onClose={closeCreateModal} title="Crear Torneo" maxSize="max-w-2xl">
+      <Modal isOpen={isCreateModalOpen} onClose={closeCreateModal} title="Create Tournament" maxSize="max-w-2xl">
         <form onSubmit={handleCreateSubmit}>
           <div className="grid grid-cols-2 gap-6">
             <div>
               <label htmlFor="tournamentName" className="block text-sm font-medium text-gray-700">
-                Nombre del torneo:
+                Tournament name:
               </label>
               <Input
                 type="text"
                 id="tournamentName"
                 name="tournamentName"
-                placeholder="Nombre del torneo"
+                placeholder="Tournament name"
                 value={formData.tournamentName}
                 onChange={handleChange}
               />
             </div>
             <div>
               <label htmlFor="status" className="block text-sm font-medium text-gray-700">
-                Estado del Torneo:
+                Tournament status:
               </label>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button className="w-full text-left bg-white text-gray-400 border border-gray-300 hover:bg-gray-100">{formData.status || "Seleccionar estado"}</Button>
+                  <Button className="w-full text-left bg-white text-gray-400 border border-gray-300 hover:bg-gray-100">{formData.status || "Select status"}</Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  {["Activo", "Inactivo", "Finalizado"].map((status) => (
+                  {["en curso", "proximamente", "finalizado"].map((status) => (
                     <DropdownMenuItem
                       key={status}
                       onSelect={() => handleStatusChange(status)}
@@ -185,7 +210,7 @@ const TournamentsPage: React.FC = () => {
             </div>
             <div>
               <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
-                Fecha de Inicio:
+                Start Date:
               </label>
               <Input
                 type="date"
@@ -197,7 +222,7 @@ const TournamentsPage: React.FC = () => {
             </div>
             <div>
               <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">
-                Fecha de Finalización:
+                End Date:
               </label>
               <Input
                 type="date"
@@ -209,33 +234,33 @@ const TournamentsPage: React.FC = () => {
             </div>
             <div>
               <label htmlFor="nMaxParticipants" className="block text-sm font-medium text-gray-700">
-                Nro. Participantes:
+                Max Participants:
               </label>
               <Input
                 type="number"
                 id="nMaxParticipants"
                 name="nMaxParticipants"
-                placeholder="Nro. Participantes"
+                placeholder="Max participants"
                 value={String(formData.nMaxParticipants)}
                 onChange={handleChange}
               />
             </div>
             <div>
               <label htmlFor="tags" className="block text-sm font-medium text-gray-700">
-                Etiquetas:
+                Tags:
               </label>
               <Input
                 type="text"
                 id="tags"
                 name="tags"
-                placeholder="Etiquetas"
+                placeholder="Tags"
                 value={formData.tags}
                 onChange={handleChange}
               />
             </div>
           </div>
           <div className="mt-6 flex justify-center">
-            <Button type="submit">Crear Torneo</Button>
+            <Button type="submit" onClick={handleSubmitTournament}>Create Tournament</Button>
           </div>
         </form>
       </Modal>

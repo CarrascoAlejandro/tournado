@@ -11,7 +11,7 @@ export type Tournament = {
   endDate: string | null;
   nMaxParticipants: number;
   tags: string;
-  userId: number;
+  userId: string;
 };
 
 interface TournamentModalProps {

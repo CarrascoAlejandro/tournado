@@ -97,7 +97,7 @@ export const tournaments = pgTable('tournament', {
   endDate: timestamp('end_date').notNull(),
   nMaxParticipants: integer('n_max_participants').notNull(),
   tags: text('tags').notNull(),
-  userId: integer('user_id').notNull()
+  userId: text('user_id').notNull()
 });
 
 export const participants = pgTable('participant', {
@@ -169,7 +169,7 @@ export async function insertTournament(
   endDate: Date,
   nMaxParticipants: number,
   tags: string,
-  userId: number
+  userId: string
 ) {
   // Primero validas los datos con el esquema
   const validatedData = insertTournamentSchema.parse({
