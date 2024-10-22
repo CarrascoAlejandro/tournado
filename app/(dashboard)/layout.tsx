@@ -6,7 +6,7 @@ import {
   Package2,
   PanelLeft,
   Settings,
-  ShoppingCart,
+  Tornado, 
   Users2
 } from 'lucide-react';
 
@@ -44,7 +44,7 @@ export default function DashboardLayout({
         <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
           <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
             <MobileNav />
-            <DashboardBreadcrumb />
+            {/* <DashboardBreadcrumb /> */}
             <SearchInput />
             <User />
           </header>
@@ -70,12 +70,12 @@ function DesktopNav() {
           <span className="sr-only">Acme Inc</span>
         </Link>
 
-        <NavItem href="#" label="Dashboard">
+        <NavItem href="#" label="Home">
           <Home className="h-5 w-5" />
         </NavItem>
 
-        <NavItem href="#" label="Orders">
-          <ShoppingCart className="h-5 w-5" />
+        <NavItem href="/MyTournaments" label="My Tournaments">
+          <Tornado className="h-5 w-5" />
         </NavItem>
 
         <NavItem href="/" label="Products">
@@ -131,14 +131,14 @@ function MobileNav() {
             className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
           >
             <Home className="h-5 w-5" />
-            Dashboard
+            Home
           </Link>
           <Link
             href="#"
             className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
           >
-            <ShoppingCart className="h-5 w-5" />
-            Orders
+            <Tornado className="h-5 w-5" />
+            My Tournaments
           </Link>
           <Link
             href="#"
@@ -167,7 +167,7 @@ function MobileNav() {
   );
 }
 
-function DashboardBreadcrumb() {
+/* function DashboardBreadcrumb() {
   return (
     <Breadcrumb className="hidden md:flex">
       <BreadcrumbList>
@@ -189,4 +189,4 @@ function DashboardBreadcrumb() {
       </BreadcrumbList>
     </Breadcrumb>
   );
-}
+} */
