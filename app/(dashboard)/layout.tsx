@@ -74,7 +74,7 @@ function DesktopNav() {
           <Home className="h-5 w-5" />
         </NavItem>
 
-        <NavItem href="/MyTournaments" label="My Tournaments">
+        <NavItem href="/my-tournaments" label="My Tournaments">
           <Tornado className="h-5 w-5" />
         </NavItem>
 
