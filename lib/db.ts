@@ -162,10 +162,10 @@ export async function deleteTournamentById(id: number) {
 
 // Función para insertar un nuevo torneo validando primero los datos
 export async function insertTournament(
-  tournamentCode: string,
+  tournamentCode: string, //TODO: Este valor debería generarse automaticamente como un UUID de 8 caracteres, implementar en un util
   tournamentName: string,
-  status: "en curso" | "proximamente" | "finalizado", // Los valores definidos en statusEnum
-  startDate: Date,
+  status: "en curso" | "proximamente" | "finalizado", // Los valores definidos en statusEnum FIXME: Este valor debería fijarse por defecto como proximamente, salvo que se especifique lo contrario
+  startDate: Date, 
   endDate: Date,
   nMaxParticipants: number,
   tags: string,
@@ -189,8 +189,8 @@ export async function insertTournament(
       tournamentCode: validatedData.tournamentCode, // Usa los datos validados
       tournamentName: validatedData.tournamentName,
       status: validatedData.status,
-      startDate: validatedData.startDate.toISOString(),
-      endDate: validatedData.endDate.toISOString(),
+      startDate: validatedData.startDate,
+      endDate: validatedData.endDate,
       nMaxParticipants: validatedData.nMaxParticipants,
       tags: validatedData.tags,
       userId: validatedData.userId
