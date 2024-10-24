@@ -1,4 +1,6 @@
-'use client';
+/* 'use client';
+
+FIXME: This file is not being used. 
 
 import {
   TableHead,
@@ -111,3 +113,4 @@ export function ProductsTable({
     </Card>
   );
 }
+ */
