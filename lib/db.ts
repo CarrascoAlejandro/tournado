@@ -110,7 +110,7 @@ export const tournaments = pgTable('tournament', {
   endDate: timestamp('end_date').notNull(),
   nMaxParticipants: integer('n_max_participants').notNull(),
   tags: text('tags').notNull(),
-  userMail: integer('user_mail').notNull()
+  userMail: text('user_mail').notNull()
 });
 
 export const participants = pgTable('participant', {
@@ -171,6 +171,48 @@ export async function getTournament(
 
 export async function deleteTournamentById(id: number) {
   await db.delete(tournaments).where(eq(tournaments.tournamentId, id));
+}
+
+// Función para insertar un nuevo torneo validando primero los datos
+export async function insertTournament(
+  tournamentCode: string, //TODO: Este valor debería generarse automaticamente como un UUID de 8 caracteres, implementar en un util
+  tournamentName: string,
+  status: "en curso" | "proximamente" | "finalizado", // Los valores definidos en statusEnum FIXME: Este valor debería fijarse por defecto como proximamente, salvo que se especifique lo contrario
+  startDate: Date, 
+  endDate: Date,
+  nMaxParticipants: number,
+  tags: string,
+  userMail: string
+) {
+  // Primero validas los datos con el esquema
+  const validatedData = insertTournamentSchema.parse({
+    tournamentCode,
+    tournamentName,
+    status,
+    startDate,
+    endDate,
+    nMaxParticipants,
+    tags,
+    userMail
+  });
+
+  // Si la validación es exitosa, haces el insert en la base de datos
+  try {
+    await db.insert(tournaments).values({
+      tournamentCode: validatedData.tournamentCode, // Usa los datos validados
+      tournamentName: validatedData.tournamentName,
+      status: validatedData.status,
+      startDate: validatedData.startDate,
+      endDate: validatedData.endDate,
+      nMaxParticipants: validatedData.nMaxParticipants,
+      tags: validatedData.tags,
+      userMail: validatedData.userMail
+    });
+    console.log(`Torneo ${tournamentName} insertado con éxito`);
+  } catch (error) {
+    console.error("Error al insertar torneo:", error);
+    throw error;
+  }
 }
 
 // TODO: adapt for the rest of the tables

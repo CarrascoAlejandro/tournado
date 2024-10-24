@@ -1,5 +1,5 @@
 -- Created by Vertabelo (http://vertabelo.com)
--- Last modification date: 2024-10-15 19:51:00.184
+-- Last modification date: 2024-10-20 22:44:26.602
 
 -- tables
 -- Table: match_bracket
@@ -33,16 +33,17 @@ CREATE TABLE tournament (
     end_date date  NOT NULL,
     n_max_participants int  NOT NULL,
     tags Varchar(512)  NOT NULL,
-    user_id int  NOT NULL,
+    user_mail varchar(255)  NOT NULL,
     CONSTRAINT tournament_pk PRIMARY KEY (tournament_id)
 );
 
 -- Table: user
 CREATE TABLE "user" (
-    user_id serial  NOT NULL,
-    username varchar(255)  NOT NULL,
     mail varchar(255)  NOT NULL,
-    CONSTRAINT user_pk PRIMARY KEY (user_id)
+    username varchar(255)  NOT NULL,
+    created_at date  NOT NULL,
+    active boolean  NOT NULL,
+    CONSTRAINT user_pk PRIMARY KEY (mail)
 );
 
 -- foreign keys
@@ -80,8 +81,8 @@ ALTER TABLE participant ADD CONSTRAINT participant_tournament
 
 -- Reference: tournament_user (table: tournament)
 ALTER TABLE tournament ADD CONSTRAINT tournament_user
-    FOREIGN KEY (user_id)
-    REFERENCES "user" (user_id)  
+    FOREIGN KEY (user_mail)
+    REFERENCES "user" (mail)  
     NOT DEFERRABLE 
     INITIALLY IMMEDIATE
 ;
