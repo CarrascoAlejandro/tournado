@@ -27,14 +27,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Request body is missing' }, { status: 400 });
     }
     const body = await request.json();
+    const nMaxParticipants = parseInt(body.nMaxParticipants, 10);
+    const tournamentCode = (Math.floor(Math.random() * 90000000) + 10000000).toString();
     console.log('Request body:', body);
     await insertTournament(
-      body.tournamentCode,
+      tournamentCode,
       body.tournamentName,
       body.status,
       new Date(body.startDate),
       new Date(body.endDate),
-      body.nMaxParticipants,
+      nMaxParticipants,
       body.tags,
       userMail? userMail: "",
     );
