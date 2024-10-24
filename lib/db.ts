@@ -97,7 +97,7 @@ export async function getTournamentsByUser(userEmail: string) {
   }
 }
 
-export const statusEnum = pgEnum('status', ['en curso', 'proximamente', 'finalizado']); // Se refiere a los estados posibles de un torneo
+export const statusEnum = pgEnum('status', ['Soon', 'In Progress', 'Finished']); // Se refiere a los estados posibles de un torneo
 
 
 
@@ -175,9 +175,9 @@ export async function deleteTournamentById(id: number) {
 
 // Función para insertar un nuevo torneo validando primero los datos
 export async function insertTournament(
-  tournamentCode: string, //TODO: Este valor debería generarse automaticamente como un UUID de 8 caracteres, implementar en un util
+  tournamentCode: string, //DONE: Este valor debería generarse automaticamente como un UUID de 8 caracteres, implementar en un util
   tournamentName: string,
-  status: "en curso" | "proximamente" | "finalizado", // Los valores definidos en statusEnum FIXME: Este valor debería fijarse por defecto como proximamente, salvo que se especifique lo contrario
+  status: "Soon" | "In Progress" | "Finished", // Los valores definidos en statusEnum FIXME: Este valor debería fijarse por defecto como proximamente, salvo que se especifique lo contrario
   startDate: Date, 
   endDate: Date,
   nMaxParticipants: number,
