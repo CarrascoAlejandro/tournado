@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { getTournament } from '@/lib/db';
+import { getTournament, insertTournament } from '@/lib/db';
+import { auth } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   console.log('GET /api/dev/tournament');
@@ -11,6 +12,35 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(tournamentsData);
   } catch (error) {
     console.error('Error fetching tournaments:', error);
+    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  console.log('POST /api/dev/tournament');
+  try {
+    const session = await auth();
+    const userMail = session?.user?.email
+    // insert a new tournament
+    if (!request.body) {
+      return NextResponse.json({ message: 'Request body is missing' }, { status: 400 });
+    }
+    const body = await request.json();
+    console.log('Request body:', body);
+    await insertTournament(
+      body.tournamentCode,
+      body.tournamentName,
+      body.status,
+      new Date(body.startDate),
+      new Date(body.endDate),
+      body.nMaxParticipants,
+      body.tags,
+      userMail? userMail: "",
+    );
+    
+    return NextResponse.json({ message: 'Tournament inserted successfully' });
+  } catch (error) {
+    console.error('Error inserting tournament:', error);
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
 }
