@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import TournamentModal from '@/components/ui/tournament-modal';
 import { Tournament } from '@/components/ui/tournament-modal';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { set } from 'zod';
 
 
 const TournamentsPage: React.FC = () => {
@@ -24,13 +25,14 @@ const TournamentsPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false); 
+  const [error, setError] = useState(""); 
   const [formData, setFormData] = useState({
     tournamentCode:'',
     tournamentName: '',
     status: '',
     startDate: '',
     endDate: '',
-    nMaxParticipants: 0,
+    nMaxParticipants: 2,
     tags: ''
   });
   const fetchTournaments = async () => {
@@ -56,6 +58,15 @@ const TournamentsPage: React.FC = () => {
 
   const handleSubmitTournament = async () => {
     try {
+      if(formData.status === '') {
+        console.error('Status is required');
+        setError("Please select a status for the tournament.");
+        return;
+      }
+      if(formData.tags === '') {
+        console.error('Tags is required');
+        return;
+      }
       const response = await fetch('/api/dev/tournament', {
         method: 'POST',
         headers: {
@@ -70,6 +81,15 @@ const TournamentsPage: React.FC = () => {
         // Aquí puedes manejar el cierre del modal o mostrar un mensaje de éxito
         await fetchTournaments();
         setIsCreateModalOpen(false);
+        setFormData({
+          tournamentCode: '',
+          tournamentName: '',
+          status: '',
+          startDate: '',
+          endDate: '',
+          nMaxParticipants: 2,
+          tags: ''
+        });
       } else {
         console.error('Error al crear el torneo');
       }
@@ -114,6 +134,7 @@ const TournamentsPage: React.FC = () => {
   };
 
   const handleStatusChange = (status: string) => {
+    setError("");
     setFormData((prev) => ({ ...prev, status }));
   };
 
@@ -202,6 +223,7 @@ const TournamentsPage: React.FC = () => {
                 placeholder="Tournament name"
                 value={formData.tournamentName}
                 onChange={handleChange}
+                required
               />
             </div>
             <div>
@@ -223,6 +245,7 @@ const TournamentsPage: React.FC = () => {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
+              {error && <p className="text-red-500 text-sm mt-1">{error}</p>} {/* Mensaje de error */}
             </div>
             <div>
               <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
@@ -234,6 +257,7 @@ const TournamentsPage: React.FC = () => {
                 name="startDate"
                 value={formData.startDate}
                 onChange={handleChange}
+                required
               />
             </div>
             <div>
@@ -246,6 +270,7 @@ const TournamentsPage: React.FC = () => {
                 name="endDate"
                 value={formData.endDate}
                 onChange={handleChange}
+                required
               />
             </div>
             <div>
@@ -259,6 +284,8 @@ const TournamentsPage: React.FC = () => {
                 placeholder="Max participants"
                 value={String(formData.nMaxParticipants)}
                 onChange={handleChange}
+                min="2"
+                required
               />
             </div>
             <div>
@@ -272,6 +299,7 @@ const TournamentsPage: React.FC = () => {
                 placeholder="Tag"
                 value={formData.tags}
                 onChange={handleChange}
+                required
               />
             </div>
           </div>
