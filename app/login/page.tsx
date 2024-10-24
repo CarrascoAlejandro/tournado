@@ -51,24 +51,7 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          {/* GitHub Sign-In */}
-          <form
-            action={async () => {
-              'use server';
-              await signIn('github', {
-                redirectTo: '/'
-              });
-            }}
-            className="w-full"
-          >
-            <Button
-              className="w-full bg-gray-800 hover:bg-gray-900 text-white flex items-center justify-center gap-2 transition-transform hover:scale-105 shadow-lg rounded-lg py-3"
-              size="lg"
-            >
-              <FaGithub className="text-2xl" />
-              Sign in with GitHub
-            </Button>
-          </form>
+
 
           <p className="text-center text-gray-500 text-xs mt-4">
             By signing in, you agree to our <a href="#" className="underline text-indigo-600 hover:text-indigo-800">Terms of Service</a> and <a href="#" className="underline text-indigo-600 hover:text-indigo-800">Privacy Policy</a>.
