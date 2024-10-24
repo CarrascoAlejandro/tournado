@@ -146,6 +146,7 @@ const TournamentsPage: React.FC = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableCell>Code</TableCell>
                   <TableCell>Name</TableCell>
                   <TableCell>Status</TableCell>
                   <TableCell>Start Date</TableCell>
@@ -161,6 +162,7 @@ const TournamentsPage: React.FC = () => {
                       onClick={() => openModal(tournament)}
                       className="cursor-pointer"
                     >
+                      <TableCell>{tournament.tournamentCode}</TableCell>
                       <TableCell>{tournament.tournamentName}</TableCell>
                       <TableCell>{tournament.status}</TableCell>
                       <TableCell>{tournament.startDate}</TableCell>
