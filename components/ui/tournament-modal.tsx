@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 
 export type Tournament = {
   tournamentId: number;
@@ -34,6 +35,15 @@ const TournamentModal: React.FC<TournamentModalProps> = ({ tournament, isOpen, o
           <p><strong>Start Date:</strong> {tournament.startDate}</p>
           <p><strong>End Date:</strong> {tournament.endDate}</p>
           <p><strong>Participants:</strong> {tournament.nMaxParticipants}</p>
+            <p>
+            <strong>Register Code:</strong> {tournament.tournamentCode}
+            <Button
+              className="ml-2 bg-gray-600 hover:bg-gray-700"
+              onClick={() => navigator.clipboard.writeText(tournament.tournamentCode)}
+            >
+              Copy to clipboard
+            </Button>
+          </p>
         </CardContent>
         <CardFooter>
           <Button onClick={onClose}>Close</Button>

@@ -152,6 +152,7 @@ const TournamentsPage: React.FC = () => {
                   <TableCell>Start Date</TableCell>
                   <TableCell>End Date</TableCell>
                   <TableCell>Participants</TableCell>
+                  <TableCell>R. Code</TableCell>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -168,6 +169,7 @@ const TournamentsPage: React.FC = () => {
                       <TableCell>{tournament.startDate}</TableCell>
                       <TableCell>{tournament.endDate}</TableCell>
                       <TableCell>{tournament.nMaxParticipants}</TableCell>
+                      <TableCell>{tournament.tournamentCode}</TableCell>
                     </TableRow>
                   ))
                 ) : (
