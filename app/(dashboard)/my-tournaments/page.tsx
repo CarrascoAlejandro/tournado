@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import {
   Card,
   CardContent,
@@ -13,22 +14,12 @@ import { Button } from '@/components/ui/button';
 import Modal from '@/components/ui/modal';
 import { Input } from '@/components/ui/input';
 import TournamentModal from '@/components/ui/tournament-modal';
+import { Tournament } from '@/components/ui/tournament-modal';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
-// Define the type for the tournament
-type Tournament = {
-  tournamentId: number;
-  tournamentCode: string;
-  tournamentName: string;
-  status: string;
-  startDate: string | null;
-  endDate: string | null;
-  nMaxParticipants: number;
-  tags: string;
-  userMail: string;
-};
 
 const TournamentsPage: React.FC = () => {
+  const { data: session, status } = useSession(); // Obtén la sesión y su estado
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
@@ -45,17 +36,22 @@ const TournamentsPage: React.FC = () => {
 
   useEffect(() => {
     const fetchTournaments = async () => {
-      try {
-        const response = await fetch('/api/dev/tournament');
-        const data = await response.json();
-        setTournaments(data.tournaments);
-      } catch (error) {
-        console.error('Error fetching tournaments:', error);
+      if (session?.user?.id) { // Comprueba si hay una sesión válida
+        try {
+          const response = await fetch(`/api/dev/tournament?userEmail=${session.user.email}`);
+          const text = await response.text(); // Obtén la respuesta como texto
+          console.log('Response:', text); // Verifica la respuesta en la consola
+
+          const data = JSON.parse(text);
+          setTournaments(data);
+        } catch (error) {
+          console.error('Error fetching tournaments:', error);
+        }
       }
     };
 
     fetchTournaments();
-  }, []);
+  }, [session]); // Dependencia de la sesión
 
   const handleSubmitTournament = async () => {
     try {
@@ -89,6 +85,8 @@ const TournamentsPage: React.FC = () => {
     setIsModalOpen(false);
     setSelectedTournament(null);
   };
+
+  if (status === 'loading') return <div>Loading...</div>;
 
   const openCreateModal = () => {
     console.log('Opening create modal');
@@ -133,38 +131,52 @@ const TournamentsPage: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="flex justify-start items-center mb-4">
-            <Button onClick={openCreateModal}>Create Tournament</Button>
+            {session ? (
+              <Button onClick={openCreateModal}>Create Tournament</Button>
+            ) : (
+              <div className="text-center">
+                <p className="mb-4">You need to sign in to start creating a tournament.</p>
+                <img src="/static/Sign-up-bro.png" alt="Login required" className="w-1/2 mx-auto" />
+              </div>
+            )}
           </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Start Date</TableCell>
-                <TableCell>End Date</TableCell>
-                <TableCell>Participants</TableCell>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tournaments.map((tournament) => (
-                <TableRow
-                  key={tournament.tournamentId}
-                  onClick={() => openModal(tournament)}
-                  className="cursor-pointer"
-                >
-                  <TableCell>{tournament.tournamentName}</TableCell>
-                  <TableCell>{tournament.status}</TableCell>
-                  <TableCell>{tournament.startDate}</TableCell>
-                  <TableCell>{tournament.endDate}</TableCell>
-                  <TableCell>{tournament.nMaxParticipants}</TableCell>
+          {session && (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableCell>Name</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Start Date</TableCell>
+                  <TableCell>End Date</TableCell>
+                  <TableCell>Participants</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {Array.isArray(tournaments) ? (
+                  tournaments.map((tournament) => (
+                    <TableRow
+                      key={tournament.tournamentId}
+                      onClick={() => openModal(tournament)}
+                      className="cursor-pointer"
+                    >
+                      <TableCell>{tournament.tournamentName}</TableCell>
+                      <TableCell>{tournament.status}</TableCell>
+                      <TableCell>{tournament.startDate}</TableCell>
+                      <TableCell>{tournament.endDate}</TableCell>
+                      <TableCell>{tournament.nMaxParticipants}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5}>No tournaments available</TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 
-      {/* Use the TournamentModal component */}
       <TournamentModal
         tournament={selectedTournament}
         isOpen={isModalOpen}

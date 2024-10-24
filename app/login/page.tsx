@@ -18,9 +18,9 @@ export default function LoginPage() {
       <Card className="w-full max-w-md bg-white/80 backdrop-blur-lg shadow-2xl rounded-lg overflow-hidden">
         <div className="flex justify-center p-6">
           <img 
-            src="/static/design1.png" 
+            src="/static/Winners-bro.png" 
             alt="Login illustration" 
-            className="w-32 h-32 object-contain"
+            className="w-1/2 object-contain"
           />
         </div>
         <CardHeader className="text-center">

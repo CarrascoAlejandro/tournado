@@ -1,5 +1,3 @@
-import 'server-only';
-
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import {
@@ -80,6 +78,21 @@ export async function deactivateUser(mail: string) {
     console.log(`Usuario con correo ${mail} desactivado.`);
   } catch (error) {
     console.error("Error al desactivar usuario:", error);
+    throw error;
+  }
+}
+
+export async function getTournamentsByUser(userEmail: string) {
+  try {
+    // Fetch tournaments where the userId matches the provided userId
+    const userTournaments = await db
+      .select()
+      .from(tournaments) // From the tournament table
+      .where(eq(tournaments.userMail, userEmail)); // Filter by userId
+
+    return userTournaments;
+  } catch (error) {
+    console.error('Error fetching tournaments by user:', error);
     throw error;
   }
 }
