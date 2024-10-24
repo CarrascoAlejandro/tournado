@@ -33,23 +33,23 @@ const TournamentsPage: React.FC = () => {
     nMaxParticipants: 0,
     tags: ''
   });
+  const fetchTournaments = async () => {
+    if (session?.user?.id) { // Comprueba si hay una sesión válida
+      try {
+        const response = await fetch(`/api/dev/tournament?userEmail=${session.user.email}`);
+        const text = await response.text(); // Obtén la respuesta como texto
+        console.log('Response:', text); // Verifica la respuesta en la consola
+
+        const data = JSON.parse(text);
+        console.log('Tournaments:', data);
+        setTournaments(data);
+      } catch (error) {
+        console.error('Error fetching tournaments:', error);
+      }
+    }
+  };
 
   useEffect(() => {
-    const fetchTournaments = async () => {
-      if (session?.user?.id) { // Comprueba si hay una sesión válida
-        try {
-          const response = await fetch(`/api/dev/tournament?userEmail=${session.user.email}`);
-          const text = await response.text(); // Obtén la respuesta como texto
-          console.log('Response:', text); // Verifica la respuesta en la consola
-
-          const data = JSON.parse(text);
-          console.log('Tournaments:', data);
-          setTournaments(data);
-        } catch (error) {
-          console.error('Error fetching tournaments:', error);
-        }
-      }
-    };
 
     fetchTournaments();
   }, [session]); // Dependencia de la sesión
@@ -68,6 +68,7 @@ const TournamentsPage: React.FC = () => {
         const data = await response.json();
         console.log('Torneo creado exitosamente:', data);
         // Aquí puedes manejar el cierre del modal o mostrar un mensaje de éxito
+        await fetchTournaments();
         setIsCreateModalOpen(false);
       } else {
         console.error('Error al crear el torneo');
