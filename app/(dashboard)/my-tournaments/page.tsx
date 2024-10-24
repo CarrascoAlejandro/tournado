@@ -213,7 +213,7 @@ const TournamentsPage: React.FC = () => {
                   <Button className="w-full text-left bg-white text-gray-400 border border-gray-300 hover:bg-gray-100">{formData.status || "Select status"}</Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  {["en curso", "proximamente", "finalizado"].map((status) => (
+                  {["Soon", "In Progress", "Finished"].map((status) => (
                     <DropdownMenuItem
                       key={status}
                       onSelect={() => handleStatusChange(status)}
@@ -263,13 +263,13 @@ const TournamentsPage: React.FC = () => {
             </div>
             <div>
               <label htmlFor="tags" className="block text-sm font-medium text-gray-700">
-                Tags:
+                Tag:
               </label>
               <Input
                 type="text"
                 id="tags"
                 name="tags"
-                placeholder="Tags"
+                placeholder="Tag"
                 value={formData.tags}
                 onChange={handleChange}
               />
