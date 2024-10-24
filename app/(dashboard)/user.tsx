@@ -15,43 +15,60 @@ export async function User() {
   let session = await auth();
   let user = session?.user;
 
+  // Log to show user session details
+  console.log("User session info:", session);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
           size="icon"
-          className="overflow-hidden rounded-full"
+          className="overflow-hidden rounded-full border-2 border-purple-600 hover:bg-purple-100 hover:scale-105 transition-transform duration-200 ease-in-out"
         >
           <Image
             src={user?.image ?? '/placeholder-user.jpg'}
-            width={36}
-            height={36}
-            alt="Avatar"
-            className="overflow-hidden rounded-full"
+            width={40}
+            height={40}
+            alt="User Avatar"
+            className="rounded-full"
           />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+      <DropdownMenuContent align="end" className="shadow-xl rounded-lg bg-white p-4">
+        <DropdownMenuLabel className="font-semibold text-gray-900">My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>Settings</DropdownMenuItem>
-        <DropdownMenuItem>Support</DropdownMenuItem>
-        <DropdownMenuSeparator />
+        <DropdownMenuItem>
+          <Link href="/help" className="text-gray-700 hover:text-purple-600">
+            Help
+          </Link>
+        </DropdownMenuItem>
         {user ? (
-          <DropdownMenuItem>
-            <form
-              action={async () => {
-                'use server';
-                await signOut();
-              }}
-            >
-              <button type="submit">Sign Out</button>
-            </form>
-          </DropdownMenuItem>
+          <>
+            <DropdownMenuItem>
+              <Link href="/account" className="text-gray-700 hover:text-purple-600">
+                My Account
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <form
+                action={async () => {
+                  'use server';
+                  await signOut();
+                }}
+              >
+                <button type="submit" className="w-full text-left text-gray-700 hover:text-red-500">
+                  Sign Out
+                </button>
+              </form>
+            </DropdownMenuItem>
+          </>
         ) : (
           <DropdownMenuItem>
-            <Link href="/login">Sign In</Link>
+            <Link href="/login" className="text-gray-700 hover:text-purple-600">
+              Sign In
+            </Link>
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>
