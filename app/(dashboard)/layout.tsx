@@ -58,7 +58,7 @@ function DesktopNav() {
           <Tornado className="h-5 w-5" />
         </NavItem>
 
-        <NavItem href="/" label="Products">
+        {/* <NavItem href="/" label="Products">
           <Package className="h-5 w-5" />
         </NavItem>
 
@@ -68,7 +68,7 @@ function DesktopNav() {
 
         <NavItem href="#" label="Analytics">
           <LineChart className="h-5 w-5" />
-        </NavItem>
+        </NavItem> */}
       </nav>
       <nav className="mt-auto flex flex-col items-center gap-4 px-2 sm:py-5">
         <Tooltip>
