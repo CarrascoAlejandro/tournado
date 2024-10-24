@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import {
   Card,
   CardContent,
@@ -13,48 +14,69 @@ import { Button } from '@/components/ui/button';
 import Modal from '@/components/ui/modal';
 import { Input } from '@/components/ui/input';
 import TournamentModal from '@/components/ui/tournament-modal';
+import { Tournament } from '@/components/ui/tournament-modal';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
-// Define the type for the tournament
-type Tournament = {
-  tournamentId: number;
-  tournamentCode: string;
-  tournamentName: string;
-  status: string;
-  startDate: string | null;
-  endDate: string | null;
-  nMaxParticipants: number;
-  tags: string;
-  userId: number;
-};
 
 const TournamentsPage: React.FC = () => {
+  const { data: session, status } = useSession(); // Obtén la sesión y su estado
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false); 
   const [formData, setFormData] = useState({
+    tournamentCode:'',
     tournamentName: '',
     status: '',
     startDate: '',
     endDate: '',
     nMaxParticipants: 0,
-    tags: '',
+    tags: ''
   });
-
-  useEffect(() => {
-    const fetchTournaments = async () => {
+  const fetchTournaments = async () => {
+    if (session?.user?.id) { // Comprueba si hay una sesión válida
       try {
-        const response = await fetch('/api/dev/tournament');
-        const data = await response.json();
-        setTournaments(data.tournaments);
+        const response = await fetch(`/api/dev/tournament?userEmail=${session.user.email}`);
+        const text = await response.text(); // Obtén la respuesta como texto
+        console.log('Response:', text); // Verifica la respuesta en la consola
+
+        const data = JSON.parse(text);
+        console.log('Tournaments:', data);
+        setTournaments(data);
       } catch (error) {
         console.error('Error fetching tournaments:', error);
       }
-    };
+    }
+  };
+
+  useEffect(() => {
 
     fetchTournaments();
-  }, []);
+  }, [session]); // Dependencia de la sesión
+
+  const handleSubmitTournament = async () => {
+    try {
+      const response = await fetch('/api/dev/tournament', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData), // Enviamos los datos del formulario
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Torneo creado exitosamente:', data);
+        // Aquí puedes manejar el cierre del modal o mostrar un mensaje de éxito
+        await fetchTournaments();
+        setIsCreateModalOpen(false);
+      } else {
+        console.error('Error al crear el torneo');
+      }
+    } catch (error) {
+      console.error('Error en la solicitud:', error);
+    }
+  };
 
   const openModal = (tournament: Tournament) => {
     setSelectedTournament(tournament);
@@ -66,6 +88,8 @@ const TournamentsPage: React.FC = () => {
     setSelectedTournament(null);
   };
 
+  if (status === 'loading') return <div>Loading...</div>;
+
   const openCreateModal = () => {
     console.log('Opening create modal');
     setIsCreateModalOpen(true);
@@ -74,12 +98,13 @@ const TournamentsPage: React.FC = () => {
   const closeCreateModal = () => {
     setIsCreateModalOpen(false);
     setFormData({
+      tournamentCode: '',
       tournamentName: '',
       status: '',
       startDate: '',
       endDate: '',
       nMaxParticipants: 0,
-      tags: '',
+      tags: ''
     });
   };
 
@@ -108,38 +133,52 @@ const TournamentsPage: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="flex justify-start items-center mb-4">
-            <Button onClick={openCreateModal}>Create Tournament</Button>
+            {session ? (
+              <Button onClick={openCreateModal}>Create Tournament</Button>
+            ) : (
+              <div className="text-center">
+                <p className="mb-4">You need to sign in to start creating a tournament.</p>
+                <img src="/static/Sign-up-bro.png" alt="Login required" className="w-1/2 mx-auto" />
+              </div>
+            )}
           </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Start Date</TableCell>
-                <TableCell>End Date</TableCell>
-                <TableCell>Participants</TableCell>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tournaments.map((tournament) => (
-                <TableRow
-                  key={tournament.tournamentId}
-                  onClick={() => openModal(tournament)}
-                  className="cursor-pointer"
-                >
-                  <TableCell>{tournament.tournamentName}</TableCell>
-                  <TableCell>{tournament.status}</TableCell>
-                  <TableCell>{tournament.startDate}</TableCell>
-                  <TableCell>{tournament.endDate}</TableCell>
-                  <TableCell>{tournament.nMaxParticipants}</TableCell>
+          {session && (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableCell>Name</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Start Date</TableCell>
+                  <TableCell>End Date</TableCell>
+                  <TableCell>Participants</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {Array.isArray(tournaments) ? (
+                  tournaments.map((tournament) => (
+                    <TableRow
+                      key={tournament.tournamentId}
+                      onClick={() => openModal(tournament)}
+                      className="cursor-pointer"
+                    >
+                      <TableCell>{tournament.tournamentName}</TableCell>
+                      <TableCell>{tournament.status}</TableCell>
+                      <TableCell>{tournament.startDate}</TableCell>
+                      <TableCell>{tournament.endDate}</TableCell>
+                      <TableCell>{tournament.nMaxParticipants}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5}>No tournaments available</TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 
-      {/* Use the TournamentModal component */}
       <TournamentModal
         tournament={selectedTournament}
         isOpen={isModalOpen}
@@ -147,32 +186,32 @@ const TournamentsPage: React.FC = () => {
       />
 
       {/* Nuevo Modal para crear un torneo */}
-      <Modal isOpen={isCreateModalOpen} onClose={closeCreateModal} title="Crear Torneo" maxSize="max-w-2xl">
+      <Modal isOpen={isCreateModalOpen} onClose={closeCreateModal} title="Create Tournament" maxSize="max-w-2xl">
         <form onSubmit={handleCreateSubmit}>
           <div className="grid grid-cols-2 gap-6">
             <div>
               <label htmlFor="tournamentName" className="block text-sm font-medium text-gray-700">
-                Nombre del torneo:
+                Tournament name:
               </label>
               <Input
                 type="text"
                 id="tournamentName"
                 name="tournamentName"
-                placeholder="Nombre del torneo"
+                placeholder="Tournament name"
                 value={formData.tournamentName}
                 onChange={handleChange}
               />
             </div>
             <div>
               <label htmlFor="status" className="block text-sm font-medium text-gray-700">
-                Estado del Torneo:
+                Tournament status:
               </label>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button className="w-full text-left bg-white text-gray-400 border border-gray-300 hover:bg-gray-100">{formData.status || "Seleccionar estado"}</Button>
+                  <Button className="w-full text-left bg-white text-gray-400 border border-gray-300 hover:bg-gray-100">{formData.status || "Select status"}</Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  {["Activo", "Inactivo", "Finalizado"].map((status) => (
+                  {["en curso", "proximamente", "finalizado"].map((status) => (
                     <DropdownMenuItem
                       key={status}
                       onSelect={() => handleStatusChange(status)}
@@ -185,7 +224,7 @@ const TournamentsPage: React.FC = () => {
             </div>
             <div>
               <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
-                Fecha de Inicio:
+                Start Date:
               </label>
               <Input
                 type="date"
@@ -197,7 +236,7 @@ const TournamentsPage: React.FC = () => {
             </div>
             <div>
               <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">
-                Fecha de Finalización:
+                End Date:
               </label>
               <Input
                 type="date"
@@ -209,33 +248,33 @@ const TournamentsPage: React.FC = () => {
             </div>
             <div>
               <label htmlFor="nMaxParticipants" className="block text-sm font-medium text-gray-700">
-                Nro. Participantes:
+                Max Participants:
               </label>
               <Input
                 type="number"
                 id="nMaxParticipants"
                 name="nMaxParticipants"
-                placeholder="Nro. Participantes"
+                placeholder="Max participants"
                 value={String(formData.nMaxParticipants)}
                 onChange={handleChange}
               />
             </div>
             <div>
               <label htmlFor="tags" className="block text-sm font-medium text-gray-700">
-                Etiquetas:
+                Tags:
               </label>
               <Input
                 type="text"
                 id="tags"
                 name="tags"
-                placeholder="Etiquetas"
+                placeholder="Tags"
                 value={formData.tags}
                 onChange={handleChange}
               />
             </div>
           </div>
           <div className="mt-6 flex justify-center">
-            <Button type="submit">Crear Torneo</Button>
+            <Button type="submit" onClick={handleSubmitTournament}>Create Tournament</Button>
           </div>
         </form>
       </Modal>

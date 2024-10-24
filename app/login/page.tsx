@@ -18,9 +18,9 @@ export default function LoginPage() {
       <Card className="w-full max-w-md bg-white/80 backdrop-blur-lg shadow-2xl rounded-lg overflow-hidden">
         <div className="flex justify-center p-6">
           <img 
-            src="/static/design1.png" 
+            src="/static/Winners-bro.png" 
             alt="Login illustration" 
-            className="w-32 h-32 object-contain"
+            className="w-1/2 object-contain"
           />
         </div>
         <CardHeader className="text-center">
@@ -51,24 +51,7 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          {/* GitHub Sign-In */}
-          <form
-            action={async () => {
-              'use server';
-              await signIn('github', {
-                redirectTo: '/'
-              });
-            }}
-            className="w-full"
-          >
-            <Button
-              className="w-full bg-gray-800 hover:bg-gray-900 text-white flex items-center justify-center gap-2 transition-transform hover:scale-105 shadow-lg rounded-lg py-3"
-              size="lg"
-            >
-              <FaGithub className="text-2xl" />
-              Sign in with GitHub
-            </Button>
-          </form>
+
 
           <p className="text-center text-gray-500 text-xs mt-4">
             By signing in, you agree to our <a href="#" className="underline text-indigo-600 hover:text-indigo-800">Terms of Service</a> and <a href="#" className="underline text-indigo-600 hover:text-indigo-800">Privacy Policy</a>.
