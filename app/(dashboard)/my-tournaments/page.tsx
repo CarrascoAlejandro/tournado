@@ -43,6 +43,7 @@ const TournamentsPage: React.FC = () => {
           console.log('Response:', text); // Verifica la respuesta en la consola
 
           const data = JSON.parse(text);
+          console.log('Tournaments:', data);
           setTournaments(data);
         } catch (error) {
           console.error('Error fetching tournaments:', error);

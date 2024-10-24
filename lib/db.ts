@@ -106,8 +106,8 @@ export const tournaments = pgTable('tournament', {
   tournamentCode: text('tournament_code').notNull(),
   tournamentName: text('tournament_name').notNull(),
   status: statusEnum('status').notNull(),
-  startDate: timestamp('start_date').notNull(),
-  endDate: timestamp('end_date').notNull(),
+  startDate: text('start_date').notNull(),
+  endDate: text('end_date').notNull(),
   nMaxParticipants: integer('n_max_participants').notNull(),
   tags: text('tags').notNull(),
   userMail: text('user_mail').notNull()
