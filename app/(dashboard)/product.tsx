@@ -1,4 +1,7 @@
-import Image from 'next/image';
+/* import Image from 'next/image';
+
+FIXME: This file is not being used.
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -58,3 +61,4 @@ export function Product({ product }: { product: SelectProduct }) {
     </TableRow>
   );
 }
+ */
