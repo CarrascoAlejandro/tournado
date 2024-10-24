@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   console.log('POST /api/dev/tournament');
   try {
     const session = await auth();
-    const userEmail = session?.user?.email
+    const userMail = session?.user?.email
     // insert a new tournament
     if (!request.body) {
       return NextResponse.json({ message: 'Request body is missing' }, { status: 400 });
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       new Date(body.endDate),
       body.nMaxParticipants,
       body.tags,
-      userEmail? userEmail: "",
+      userMail? userMail: "",
     );
     
     return NextResponse.json({ message: 'Tournament inserted successfully' });

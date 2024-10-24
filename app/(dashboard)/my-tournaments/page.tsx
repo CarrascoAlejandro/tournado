@@ -25,7 +25,7 @@ type Tournament = {
   endDate: string | null;
   nMaxParticipants: number;
   tags: string;
-  userId: string;
+  userMail: string;
 };
 
 const TournamentsPage: React.FC = () => {

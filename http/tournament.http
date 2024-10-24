@@ -13,7 +13,7 @@ Accept: application/json
     "endDate": "2024-10-30",
     "nMaxParticipants": 10,
     "tags": "tag1",
-    "userId": 1
+    "userMail": "diana.montero.g@ucb.edu.bo"
 }
 
     
