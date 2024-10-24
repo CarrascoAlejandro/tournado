@@ -43,6 +43,7 @@ export default function DashboardLayout({
         <DesktopNav />
         <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
           <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+          {/* <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:h-14 sm:border-0 sm:bg-transparent sm:px-6"> */}
             <MobileNav />
             {/* <DashboardBreadcrumb /> */}
             <SearchInput />
@@ -70,7 +71,7 @@ function DesktopNav() {
           <span className="sr-only">Acme Inc</span>
         </Link>
 
-        <NavItem href="#" label="Home">
+        <NavItem href="/" label="Home">
           <Home className="h-5 w-5" />
         </NavItem>
 
@@ -78,7 +79,7 @@ function DesktopNav() {
           <Tornado className="h-5 w-5" />
         </NavItem>
 
-        <NavItem href="/" label="Products">
+        <NavItem href="/products" label="Products">
           <Package className="h-5 w-5" />
         </NavItem>
 
