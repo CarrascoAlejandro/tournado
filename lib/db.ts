@@ -88,7 +88,7 @@ export async function getTournamentsByUser(userEmail: string) {
     const userTournaments = await db
       .select()
       .from(tournaments) // From the tournament table
-      .where(eq(tournaments.userEmail, userEmail)); // Filter by userId
+      .where(eq(tournaments.userMail, userEmail)); // Filter by userId
 
     return userTournaments;
   } catch (error) {
@@ -110,7 +110,7 @@ export const tournaments = pgTable('tournament', {
   endDate: timestamp('end_date').notNull(),
   nMaxParticipants: integer('n_max_participants').notNull(),
   tags: text('tags').notNull(),
-  userEmail: integer('user_email').notNull()
+  userMail: integer('user_mail').notNull()
 });
 
 export const participants = pgTable('participant', {
