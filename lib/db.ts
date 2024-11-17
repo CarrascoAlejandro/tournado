@@ -24,6 +24,7 @@ export const users = pgTable('user', {
   active: boolean('active').notNull(),
 });
 
+
 // Función para insertar un nuevo usuario
 export async function insertUser(mail: string, username: string) {
   try {
@@ -197,6 +198,7 @@ export async function insertTournament(
   });
 
   // Si la validación es exitosa, haces el insert en la base de datos
+  
   try {
     await db.insert(tournaments).values({
       tournamentCode: validatedData.tournamentCode, // Usa los datos validados
@@ -215,4 +217,17 @@ export async function insertTournament(
   }
 }
 
-// TODO: adapt for the rest of the tables
+export async function getTournamentIdByCode(tournamentCode: string) {
+  try {
+    const tournament = await db
+      .select()
+      .from(tournaments)
+      .where(eq(tournaments.tournamentCode, tournamentCode))
+      .limit(1);
+
+    return tournament.length > 0 ? tournament[0].tournamentId : null;
+  } catch (error) {
+    console.error("Error al obtener ID de torneo por código:", error);
+    throw error;
+  }
+}

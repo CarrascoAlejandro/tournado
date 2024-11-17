@@ -169,8 +169,16 @@
                 href="/my-tournaments"
                 className="px-6 py-3 border border-white text-white rounded-lg shadow-lg transition-transform transform hover:-translate-y-1"
               >
-                Mis torneos
+                My Tournaments
               </Link>
+
+              <Link
+                href="/join-tournament"
+                className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-700 text-white border border-red-600 rounded-lg shadow-md transform transition-transform duration-300 hover:scale-105 hover:shadow-xl hover:from-red-600 hover:to-red-800"
+              >
+                Unirme a un torneo
+              </Link>
+
             </div>
           </div>
           <img
