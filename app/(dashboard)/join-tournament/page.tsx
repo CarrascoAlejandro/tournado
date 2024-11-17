@@ -1,30 +1,30 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation"; // Importar useRouter para la redirección
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner"; // Asegúrate de tener un Spinner
 
 const JoinTournamentPage: React.FC = () => {
   const [tournamentId, setTournamentId] = useState("");
   const [participantName, setParticipantName] = useState("");
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // Estado de carga
+  const router = useRouter(); // Usar el hook useRouter para la redirección
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(""); // Limpiar errores previos
-
+    setLoading(true);
+  
     // Validación básica
     if (!tournamentId || !participantName) {
       setError("Todos los campos son obligatorios.");
+      setLoading(false);
       return;
     }
-
-    setLoading(true); // Iniciar carga
-
+  
     try {
       const response = await fetch("/api/dev/join-tournament", {
         method: "POST",
@@ -36,24 +36,27 @@ const JoinTournamentPage: React.FC = () => {
           participantName,
         }),
       });
-
+  
+      const data = await response.json();
+  
       if (response.ok) {
-        setSuccessMessage("Te has unido al torneo exitosamente.");
+        setSuccessMessage("¡Te has unido al torneo exitosamente!");
         setError("");
         setTournamentId("");
         setParticipantName("");
+        router.push(`/view-tournament/${tournamentId}`);
       } else {
-        const data = await response.json();
+        // Mensaje de error más detallado
         setError(data.error || "Ocurrió un error al unirte al torneo.");
       }
     } catch (error) {
       console.error("Error en la solicitud:", error);
       setError("Error de red. Por favor, inténtalo de nuevo.");
     } finally {
-      setLoading(false); // Finalizar carga
+      setLoading(false);
     }
   };
-
+  
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-red-50 to-red-100">
       <Card className="w-full max-w-md p-6 shadow-xl bg-white rounded-lg">
@@ -105,13 +108,18 @@ const JoinTournamentPage: React.FC = () => {
               />
             </div>
             <div className="mt-6 flex justify-center">
-              <Button
-                type="submit"
-                className="px-6 py-2 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition-transform transform hover:-translate-y-1"
-                disabled={loading} // Desactivar el botón durante la carga
-              >
-                {loading ? <Spinner /> : "Unirse"}
-              </Button>
+            <Button
+  type="submit"
+  className={`px-6 py-2 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition-transform transform hover:-translate-y-1 ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+  disabled={loading}
+>
+  {loading ? (
+    <span className="animate-spin">🔄</span> // Spinner o ícono de carga
+  ) : (
+    "Unirse"
+  )}
+</Button>
+
             </div>
           </form>
         </CardContent>
