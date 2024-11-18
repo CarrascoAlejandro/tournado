@@ -144,36 +144,42 @@ const TournamentsPage: React.FC = () => {
     closeCreateModal();
   };
   
-
   return (
     <div>
-      <Card>
+      <Card className="shadow-lg rounded-xl bg-white p-6">
         <CardHeader>
-          <CardTitle>My Tournaments</CardTitle>
-          <CardDescription>View all ongoing and completed tournaments you created.</CardDescription>
+          <CardTitle className="text-xl font-semibold text-gray-800">My Tournaments</CardTitle>
+          <CardDescription className="text-sm text-gray-500">View all ongoing and completed tournaments you created.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-start items-center mb-4">
+          <div className="flex justify-start items-center mb-6">
             {session ? (
-              <Button onClick={openCreateModal}>Create Tournament</Button>
+              <Button onClick={openCreateModal} className="bg-indigo-600 text-white hover:bg-indigo-700 transition duration-300">
+                Create Tournament
+              </Button>
             ) : (
-              <div className="text-center">
-                <p className="mb-4">You need to sign in to start creating a tournament.</p>
-                <img src="/static/Sign-up-bro.png" alt="Login required" className="w-1/2 mx-auto" />
+              <div className="text-center w-full">
+                <p className="mb-4 text-gray-600">You need to sign in to start creating a tournament.</p>
+                <img
+                  src="/static/Sign-up-bro.png"
+                  alt="Login required"
+                  className="w-1/2 mx-auto rounded-md shadow-lg"
+                />
               </div>
             )}
           </div>
+  
           {session && (
-            <Table>
+            <Table className="min-w-full border-collapse bg-white rounded-lg shadow-md">
               <TableHeader>
-                <TableRow>
-                  <TableCell>Code</TableCell>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Start Date</TableCell>
-                  <TableCell>End Date</TableCell>
-                  <TableCell>Participants</TableCell>
-                  <TableCell>R. Code</TableCell>
+                <TableRow className="text-gray-700 bg-indigo-100">
+                  <TableCell className="font-semibold">Code</TableCell>
+                  <TableCell className="font-semibold">Name</TableCell>
+                  <TableCell className="font-semibold">Status</TableCell>
+                  <TableCell className="font-semibold">Start Date</TableCell>
+                  <TableCell className="font-semibold">End Date</TableCell>
+                  <TableCell className="font-semibold">Participants</TableCell>
+                  <TableCell className="font-semibold">R. Code</TableCell>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -182,7 +188,7 @@ const TournamentsPage: React.FC = () => {
                     <TableRow
                       key={tournament.tournamentId}
                       onClick={() => openModal(tournament)}
-                      className="cursor-pointer"
+                      className="cursor-pointer hover:bg-indigo-50 transition duration-200"
                     >
                       <TableCell>{tournament.tournamentCode}</TableCell>
                       <TableCell>{tournament.tournamentName}</TableCell>
@@ -195,7 +201,7 @@ const TournamentsPage: React.FC = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5}>No tournaments available</TableCell>
+                    <TableCell colSpan={7} className="text-center text-gray-500 py-4">No tournaments available</TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -203,17 +209,17 @@ const TournamentsPage: React.FC = () => {
           )}
         </CardContent>
       </Card>
-
+  
       <TournamentModal
         tournament={selectedTournament}
         isOpen={isModalOpen}
         onClose={closeModal}
       />
-
+  
       {/* Nuevo Modal para crear un torneo */}
       <Modal isOpen={isCreateModalOpen} onClose={closeCreateModal} title="Create Tournament" maxSize="max-w-2xl">
         <form onSubmit={handleCreateSubmit}>
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="tournamentName" className="block text-sm font-medium text-gray-700">
                 Tournament name:
@@ -225,30 +231,36 @@ const TournamentsPage: React.FC = () => {
                 placeholder="Tournament name"
                 value={formData.tournamentName}
                 onChange={handleChange}
+                className="rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 w-full"
                 required
               />
             </div>
+  
             <div>
               <label htmlFor="status" className="block text-sm font-medium text-gray-700">
                 Tournament status:
               </label>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button className="w-full text-left bg-white text-gray-400 border border-gray-300 hover:bg-gray-100">{formData.status || "Select status"}</Button>
+                  <Button className="w-full text-left bg-white text-gray-400 border border-gray-300 hover:bg-gray-100 rounded-lg focus:ring-indigo-500">
+                    {formData.status || "Select status"}
+                  </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   {["Soon", "In Progress", "Finished"].map((status) => (
                     <DropdownMenuItem
                       key={status}
                       onSelect={() => handleStatusChange(status)}
+                      className="hover:bg-indigo-100 rounded-md"
                     >
                       {status}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-              {error && <p className="text-red-500 text-sm mt-1">{error}</p>} {/* Mensaje de error */}
+              {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
             </div>
+  
             <div>
               <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
                 Start Date:
@@ -259,9 +271,11 @@ const TournamentsPage: React.FC = () => {
                 name="startDate"
                 value={formData.startDate}
                 onChange={handleChange}
+                className="rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 w-full"
                 required
               />
             </div>
+  
             <div>
               <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">
                 End Date:
@@ -272,9 +286,11 @@ const TournamentsPage: React.FC = () => {
                 name="endDate"
                 value={formData.endDate}
                 onChange={handleChange}
+                className="rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 w-full"
                 required
               />
             </div>
+  
             <div>
               <label htmlFor="nMaxParticipants" className="block text-sm font-medium text-gray-700">
                 Max Participants:
@@ -287,9 +303,11 @@ const TournamentsPage: React.FC = () => {
                 value={String(formData.nMaxParticipants)}
                 onChange={handleChange}
                 min="2"
+                className="rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 w-full"
                 required
               />
             </div>
+  
             <div>
               <label htmlFor="tags" className="block text-sm font-medium text-gray-700">
                 Tag:
@@ -301,17 +319,19 @@ const TournamentsPage: React.FC = () => {
                 placeholder="Tag"
                 value={formData.tags}
                 onChange={handleChange}
+                className="rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 w-full"
                 required
               />
             </div>
           </div>
+  
           <div className="mt-6 flex justify-center">
-            <Button type="submit" onClick={handleSubmitTournament}>Create Tournament</Button>
+            <Button type="submit" className="bg-indigo-600 text-white hover:bg-indigo-700 transition duration-300">Create Tournament</Button>
           </div>
         </form>
       </Modal>
     </div>
   );
-};
+}  
 
 export default TournamentsPage;
