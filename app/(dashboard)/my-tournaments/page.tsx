@@ -191,6 +191,7 @@ const TournamentsPage: React.FC = () => {
                       onClick={() => openModal(tournament)}
                       className="cursor-pointer hover:bg-indigo-50 transition duration-200"
                     >
+                      {/* TODO: El código de torneo está repertido, en vez de eso se podría mostrar la cantidad de participantes registrados */}
                       <TableCell>{tournament.tournamentCode}</TableCell>
                       <TableCell>{tournament.tournamentName}</TableCell>
                       <TableCell>{tournament.status}</TableCell>
