@@ -141,6 +141,7 @@ const TournamentsPage: React.FC = () => {
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Creating tournament:', formData);
+    handleSubmitTournament();
     closeCreateModal();
   };
   
