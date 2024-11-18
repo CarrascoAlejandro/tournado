@@ -23,10 +23,10 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
       if (res.ok) {
         setParticipants(data.participants);
       } else {
-        setError(data.error || "Hubo un error al obtener los participantes.");
+        setError(data.error || "There was an error fetching the participants.");
       }
     } catch (error) {
-      setError("Error al conectar con el servidor.");
+      setError("Error connecting to the server.");
     } finally {
       setLoading(false);
     }
@@ -41,20 +41,20 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
   return (
     <div className="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
       <h1 className="text-3xl font-bold mb-6 text-center text-purple-700">
-        Participantes del Torneo
+        Tournament Participants
       </h1>
 
       <button
         onClick={fetchParticipants}
         className="bg-purple-500 text-white px-6 py-2 rounded-lg hover:bg-purple-600 mb-4"
       >
-        Actualizar
+        Refresh
       </button>
 
       {loading ? (
         <div className="flex justify-center items-center">
           <div className="loader"></div>
-          <p className="text-lg text-purple-700 ml-4">Cargando participantes...</p>
+          <p className="text-lg text-purple-700 ml-4">Loading participants...</p>
         </div>
       ) : error ? (
         <p className="text-red-500">{error}</p>
@@ -80,13 +80,13 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
           ))}
         </div>
       ) : (
-        <p className="text-gray-700">No hay participantes registrados.</p>
+        <p className="text-gray-700">No participants registered.</p>
       )}
     </div>
   );
 };
 
-// Función para generar colores aleatorios para las cards
+// Function to generate random colors for the cards
 const getRandomColor = () => {
   const colors = ["#FCE38A", "#F38181", "#95E1D3", "#EAFFD0", "#B5EAEA"];
   return colors[Math.floor(Math.random() * colors.length)];
