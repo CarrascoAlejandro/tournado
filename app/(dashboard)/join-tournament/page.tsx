@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation"; // Importar useRouter para la redirección
+import { useRouter } from "next/navigation"; // Importing useRouter for redirection
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,16 +11,16 @@ const JoinTournamentPage: React.FC = () => {
   const [participantName, setParticipantName] = useState("");
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [loading, setLoading] = useState(false); // Estado de carga
-  const router = useRouter(); // Usar el hook useRouter para la redirección
+  const [loading, setLoading] = useState(false); // Loading state
+  const router = useRouter(); // Using the useRouter hook for redirection
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
   
-    // Validación básica
+    // Basic validation
     if (!tournamentId || !participantName) {
-      setError("Todos los campos son obligatorios.");
+      setError("All fields are required.");
       setLoading(false);
       return;
     }
@@ -40,50 +40,50 @@ const JoinTournamentPage: React.FC = () => {
       const data = await response.json();
   
       if (response.ok) {
-        setSuccessMessage("¡Te has unido al torneo exitosamente!");
+        setSuccessMessage("You have successfully joined the tournament!");
         setError("");
         setTournamentId("");
         setParticipantName("");
         router.push(`/view-tournament/${tournamentId}`);
       } else {
-        // Mensaje de error más detallado
-        setError(data.error || "Ocurrió un error al unirte al torneo.");
+        // More detailed error message
+        setError(data.error || "An error occurred while joining the tournament.");
       }
     } catch (error) {
-      console.error("Error en la solicitud:", error);
-      setError("Error de red. Por favor, inténtalo de nuevo.");
+      console.error("Error in request:", error);
+      setError("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
   };
   
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-red-50 to-red-100">
-      <Card className="w-full max-w-md p-6 shadow-xl bg-white rounded-lg">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-red-600">
-            Unirme a un Torneo
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-purple-200 via-blue-300 to-white">
+      <Card className="w-full max-w-md p-6 shadow-2xl bg-white rounded-xl">
+        <CardHeader className="text-center mb-4">
+          <CardTitle className="text-3xl font-extrabold text-purple-700">
+            Join a Tournament
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            {error && <p className="text-red-600 text-sm">{error}</p>}
             {successMessage && (
-              <p className="text-green-500 text-sm">{successMessage}</p>
+              <p className="text-green-600 text-sm">{successMessage}</p>
             )}
             <div>
               <label
                 htmlFor="tournamentId"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-md font-semibold text-gray-800"
               >
-                ID de Torneo
+                Tournament ID
               </label>
               <Input
                 type="text"
                 id="tournamentId"
                 name="tournamentId"
-                placeholder="Ingrese el ID del torneo"
-                className="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-red-500 focus:border-red-500"
+                placeholder="Enter the tournament ID"
+                className="mt-2 block w-full border-gray-300 rounded-lg shadow-md focus:ring-purple-500 focus:border-purple-500 transition-colors"
                 value={tournamentId}
                 onChange={(e) => setTournamentId(e.target.value)}
                 required
@@ -92,34 +92,33 @@ const JoinTournamentPage: React.FC = () => {
             <div>
               <label
                 htmlFor="participantName"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-md font-semibold text-gray-800"
               >
-                Nombre del Participante
+                Participant Name
               </label>
               <Input
                 type="text"
                 id="participantName"
                 name="participantName"
-                placeholder="Ingrese su nombre"
-                className="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-red-500 focus:border-red-500"
+                placeholder="Enter your name"
+                className="mt-2 block w-full border-gray-300 rounded-lg shadow-md focus:ring-purple-500 focus:border-purple-500 transition-colors"
                 value={participantName}
                 onChange={(e) => setParticipantName(e.target.value)}
                 required
               />
             </div>
-            <div className="mt-6 flex justify-center">
-            <Button
-  type="submit"
-  className={`px-6 py-2 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition-transform transform hover:-translate-y-1 ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
-  disabled={loading}
->
-  {loading ? (
-    <span className="animate-spin">🔄</span> // Spinner o ícono de carga
-  ) : (
-    "Unirse"
-  )}
-</Button>
-
+            <div className="mt-8 flex justify-center">
+              <Button
+                type="submit"
+                className={`px-8 py-3 bg-purple-600 text-white font-semibold rounded-xl shadow-lg hover:bg-purple-700 transform hover:scale-105 transition duration-300 ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                disabled={loading}
+              >
+                {loading ? (
+                  <span className="animate-spin">🔄</span> // Spinner or loading icon
+                ) : (
+                  "Join"
+                )}
+              </Button>
             </div>
           </form>
         </CardContent>

@@ -13,10 +13,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Obtener el ID del torneo usando el código proporcionado
     const tournamentIdFromCode = await getTournamentIdByCode(tournamentId);
 
-    // Verifica si el torneo existe
     if (!tournamentIdFromCode) {
       return NextResponse.json(
         { error: "El código de torneo no es válido o no existe" },
@@ -24,7 +22,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Inserta el participante en la base de datos usando Drizzle ORM
     const result = await db.insert(participants).values({
       tournamentId: tournamentIdFromCode, // Usamos la columna correcta "tournamentId"
       participantName,

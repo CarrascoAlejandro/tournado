@@ -2,13 +2,18 @@
 
 import { useEffect, useState } from "react";
 
+
+
 interface Participant {
   participantId: number;
   participantName: string;
   tournamentId: number;
 }
 
+
+
 const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
+
   const { tournamentId } = params;
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [error, setError] = useState<string | null>(null);
