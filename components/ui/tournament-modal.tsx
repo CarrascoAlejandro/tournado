@@ -22,11 +22,6 @@ interface TournamentModalProps {
 const TournamentModal: React.FC<TournamentModalProps> = ({ tournament, isOpen, onClose }) => {
   if (!tournament || !isOpen) return null;
 
-  const handleOpenTournamentDetails = () => {
-    const tournamentUrl = `/tournament-details/${tournament.tournamentCode}`;
-    window.open(tournamentUrl, '_blank');
-  };
-
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
       <div className="bg-white p-4 sm:p-6 rounded-xl shadow-lg w-full max-w-lg transition-transform transform scale-100 hover:scale-105">
@@ -78,12 +73,6 @@ const TournamentModal: React.FC<TournamentModalProps> = ({ tournament, isOpen, o
             onClick={onClose}
           >
             Close
-          </Button>
-          <Button 
-            className="bg-indigo-600 text-white text-xs px-4 py-2 rounded-lg hover:bg-indigo-700"
-            onClick={handleOpenTournamentDetails}
-          >
-            View Participants
           </Button>
         </div>
       </div>
