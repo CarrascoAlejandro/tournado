@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-
-
 interface Participant {
   participantId: number;
   participantName: string;
@@ -37,6 +35,45 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
     }
   };
 
+  const handleMatchGames = async () => {
+    try {
+      const res = await fetch(`/api/dev/tournament/${tournamentId}/start`, {
+        method: "POST",
+      });
+  
+      const data = await res.json();
+  
+      if (res.ok) {
+        // Save match brackets in localStorage
+        localStorage.setItem("matchBrackets", JSON.stringify(data.matchBrackets));
+  
+        // Navigate to the bracket page
+        const tournamentUrl = `/bracket-tournament/${tournamentId}`;
+        window.open(tournamentUrl, "_blank");
+      } else if (data.error === "Tournament has already started") {
+        // Tournament already started, fetch existing match brackets
+        const fetchRes = await fetch(`/api/dev/tournament/${tournamentId}/brackets`);
+        const fetchData = await fetchRes.json();
+  
+        if (fetchRes.ok) {
+          // Save existing match brackets in localStorage
+          localStorage.setItem("matchBrackets", JSON.stringify(fetchData.matchBrackets));
+  
+          // Navigate to the bracket page
+          const tournamentUrl = `/bracket-tournament/${tournamentId}`;
+          window.open(tournamentUrl, "_blank");
+        } else {
+          setError(fetchData.error || "Error fetching existing tournament data.");
+        }
+      } else {
+        setError(data.error || "Error starting the tournament.");
+      }
+    } catch (err) {
+      setError("Error connecting to the server.");
+    }
+  };
+  
+  
   useEffect(() => {
     if (tournamentId) {
       fetchParticipants();
@@ -57,7 +94,7 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
         </button>
         <button
           className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
-          onClick={() => alert('Match Games logic coming soon!')}
+          onClick={handleMatchGames}
         >
           Match Games
         </button>
