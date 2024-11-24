@@ -11,7 +11,7 @@ import {
   boolean,
   date
 } from 'drizzle-orm/pg-core';
-import { count, eq, ilike } from 'drizzle-orm';
+import { not, and, or, count, eq, ilike } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
 
 export const db = drizzle(neon(process.env.POSTGRES_URL!));
@@ -388,6 +388,33 @@ export async function updateScoresByBracketId(
     return updatedBracket.length > 0 ? updatedBracket[0] : null;
   } catch (error) {
     console.error("Error al actualizar puntajes por ID de bracket:", error);
+    throw error;
+  }
+}
+
+// Dentro de un torneo encontrar los participantes que no tienen un match bracket
+export async function getParticipantsWithoutMatchBracket(tournamentId: number) {
+  try {
+    const participantsWithMatchBracket = await db
+      .select({ participantId: participants.participantId })
+      .from(participants)
+      .innerJoin(matchBrackets, or(eq(participants.participantId, matchBrackets.participant1Id), eq(participants.participantId, matchBrackets.participant2Id)))
+      .where(eq(participants.tournamentId, tournamentId));
+
+    const allParticipants = await db
+      .select({ participantId: participants.participantId })
+      .from(participants)
+      .where(eq(participants.tournamentId, tournamentId));
+
+    const participantsWithoutMatchBracket = allParticipants.filter(
+      participant => !participantsWithMatchBracket.some(
+        participantWithMatchBracket => participantWithMatchBracket.participantId === participant.participantId
+      )
+    );
+
+    return participantsWithoutMatchBracket;
+  } catch (error) {
+    console.error("Error al obtener participantes sin match bracket:", error);
     throw error;
   }
 }

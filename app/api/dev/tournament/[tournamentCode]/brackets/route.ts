@@ -1,4 +1,4 @@
-import { createMatchBracket, getMatchBracketsByTournamentId, getTournamentByCode, updateScoresByBracketId } from "@/lib/db";
+import { createMatchBracket, getMatchBracketsByTournamentId, getTournamentByCode, updateScoresByBracketId, getParticipantsWithoutMatchBracket } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { CreateBracketInput, UpdateBracketInput } from "types/bracketInput";
 
@@ -28,7 +28,11 @@ export async function GET(req: NextRequest, { params }: { params: { tournamentCo
 
         console.log("brackets: ", brackets);
 
-        return NextResponse.json({ brackets }, { status: 200 });
+        // find participants not matched to a bracket
+        const byes = await getParticipantsWithoutMatchBracket(tournament.tournamentId);
+
+
+        return NextResponse.json({ brackets, byes }, { status: 200 });
     } catch (error) {
         console.error("Error getting brackets:", error);
         return NextResponse.json(
