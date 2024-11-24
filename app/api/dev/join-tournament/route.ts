@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, participants, getTournamentIdByCode } from "@/lib/db"; // Importa la conexión y la tabla desde db.ts
+import { db, participants, getTournamentByCode } from "@/lib/db"; // Importa la conexión y la tabla desde db.ts
 import { eq } from "drizzle-orm";
 
 export async function POST(req: NextRequest) {
@@ -13,7 +13,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const tournamentIdFromCode = await getTournamentIdByCode(tournamentId);
+    const tournamentFromCode = await getTournamentByCode(tournamentId);
+
+    if (!tournamentFromCode) {
+      return NextResponse.json(
+        { error: "El código de torneo no es válido o no existe" },
+        { status: 400 }
+      );
+    } 
+
+    const tournamentIdFromCode = tournamentFromCode.tournamentId;
 
     if (!tournamentIdFromCode) {
       return NextResponse.json(
