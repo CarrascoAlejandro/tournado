@@ -3,7 +3,7 @@ import { db, participants, getTournamentIdByCode } from "@/lib/db"; // Importa l
 import { eq } from "drizzle-orm";
 
 export async function POST(req: NextRequest) {
-  try {
+  try { // TODO: Esto debería estar en tournament/[tournamentCode]/join
     const { tournamentId, participantName } = await req.json();
 
     if (!tournamentId || !participantName) {

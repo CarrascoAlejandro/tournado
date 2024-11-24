@@ -231,3 +231,92 @@ export async function getTournamentIdByCode(tournamentCode: string) {
     throw error;
   }
 }
+
+// Seleccionar el id de torneo a partir del codigo de registro
+export async function getTournamentByCode(tournamentCode: string) {
+  try {
+    const tournament = await db
+      .select()
+      .from(tournaments)
+      .where(eq(tournaments.tournamentCode, tournamentCode))
+      .limit(1);
+
+    return tournament.length > 0 ? tournament[0] : null;
+  } catch (error) {
+    console.error("Error al obtener torneo por código:", error);
+    throw error;
+  }
+}
+
+// Actualizar estado del torneo
+export async function updateTournamentStatus(tournamentId: number, status: "Soon" | "In Progress" | "Finished") {
+  try {
+    await db
+      .update(tournaments)
+      .set({ status })
+      .where(eq(tournaments.tournamentId, tournamentId));
+
+    console.log(`Estado del torneo ${tournamentId} actualizado a ${status}`);
+  } catch (error) {
+    console.error("Error al actualizar estado de torneo:", error);
+    throw error;
+  }
+}
+
+// Seleccionar los ids de los participantes de un torneo
+export async function getParticipantsByTournamentId(tournamentId: number) {
+  try {
+    const participants_ids = await db
+      .select({ participantId: participants.participantId })
+      .from(participants)
+      .where(eq(participants.tournamentId, tournamentId));
+
+    return participants_ids;
+  } catch (error) {
+    console.error("Error al obtener participantes por ID de torneo:", error);
+    throw error;
+  }
+}
+
+// Insertar un nuevo match bracket
+export async function insertMatchBracket(
+  participant1Id: number,
+  participant2Id: number,
+  tournamentId: number,
+  homeResult: number,
+  awayResult: number,
+  status: string,
+  level: string
+) {
+  try {
+    await db.insert(matchBrackets).values({
+      participant1Id,
+      participant2Id,
+      tournamentId,
+      homeResult,
+      awayResult,
+      status,
+      level
+    });
+    console.log(`Match bracket insertado con éxito`);
+  } catch (error) {
+    console.error("Error al insertar match bracket:", error);
+    throw error;
+  }
+}
+
+// Seleccionar los match brackets de un torneo, ordenados por nivel
+export async function getMatchBracketsByTournamentId(tournamentId: number) {
+  try {
+    const matchBracketsResult = await db
+      .select()
+      .from(matchBrackets)
+      .where(eq(matchBrackets.tournamentId, tournamentId))
+      .orderBy(matchBrackets.level);
+
+    return matchBracketsResult;
+  } catch (error) {
+    console.error("Error al obtener match brackets por ID de torneo:", error);
+    throw error;
+  }
+}

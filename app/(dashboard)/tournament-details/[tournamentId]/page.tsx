@@ -43,6 +43,7 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
     }
   }, [tournamentId]);
 
+  // TODO: Mostrar el nombre del torneo en el título
   return (
     <div className="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-6">
       <h1 className="text-3xl font-semibold mb-6 text-center text-purple-800">Tournament Participants</h1>
