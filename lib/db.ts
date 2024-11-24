@@ -232,22 +232,6 @@ export async function getTournamentIdByCode(tournamentCode: string) {
   }
 }
 
-// Seleccionar el id de torneo a partir del codigo de registro
-export async function getTournamentByCode(tournamentCode: string) {
-  try {
-    const tournament = await db
-      .select()
-      .from(tournaments)
-      .where(eq(tournaments.tournamentCode, tournamentCode))
-      .limit(1);
-
-    return tournament.length > 0 ? tournament[0] : null;
-  } catch (error) {
-    console.error("Error al obtener torneo por código:", error);
-    throw error;
-  }
-}
-
 // Actualizar estado del torneo
 export async function updateTournamentStatus(tournamentId: number, status: "Soon" | "In Progress" | "Finished") {
   try {
