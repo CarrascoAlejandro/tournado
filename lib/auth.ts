@@ -20,6 +20,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       authorization: {
         params: {
           redirect_uri: process.env.NEXTAUTH_URL + "/api/auth/callback/google",
+          access_type: "offline",
+          prompt: "consent",
+          response_type: "code"
         }
       }
     }),
