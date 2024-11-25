@@ -11,7 +11,7 @@ import {
   boolean,
   date
 } from 'drizzle-orm/pg-core';
-import { count, eq, ilike } from 'drizzle-orm';
+import { not, and, or, count, eq, ilike } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
 
 export const db = drizzle(neon(process.env.POSTGRES_URL!));
@@ -23,6 +23,7 @@ export const users = pgTable('user', {
   createdAt: date('created_at').notNull(), // Cambia esto si decides utilizar otro tipo
   active: boolean('active').notNull(),
 });
+
 
 // Función para insertar un nuevo usuario
 export async function insertUser(mail: string, username: string) {
@@ -97,7 +98,7 @@ export async function getTournamentsByUser(userEmail: string) {
   }
 }
 
-export const statusEnum = pgEnum('status', ['en curso', 'proximamente', 'finalizado']); // Se refiere a los estados posibles de un torneo
+export const statusEnum = pgEnum('status', ['Soon', 'In Progress', 'Finished']); // Se refiere a los estados posibles de un torneo
 
 
 
@@ -175,9 +176,9 @@ export async function deleteTournamentById(id: number) {
 
 // Función para insertar un nuevo torneo validando primero los datos
 export async function insertTournament(
-  tournamentCode: string, //TODO: Este valor debería generarse automaticamente como un UUID de 8 caracteres, implementar en un util
+  tournamentCode: string, //DONE: Este valor debería generarse automaticamente como un UUID de 8 caracteres, implementar en un util
   tournamentName: string,
-  status: "en curso" | "proximamente" | "finalizado", // Los valores definidos en statusEnum FIXME: Este valor debería fijarse por defecto como proximamente, salvo que se especifique lo contrario
+  status: "Soon" | "In Progress" | "Finished", // Los valores definidos en statusEnum FIXME: Este valor debería fijarse por defecto como proximamente, salvo que se especifique lo contrario
   startDate: Date, 
   endDate: Date,
   nMaxParticipants: number,
@@ -197,6 +198,7 @@ export async function insertTournament(
   });
 
   // Si la validación es exitosa, haces el insert en la base de datos
+  
   try {
     await db.insert(tournaments).values({
       tournamentCode: validatedData.tournamentCode, // Usa los datos validados
@@ -215,4 +217,204 @@ export async function insertTournament(
   }
 }
 
-// TODO: adapt for the rest of the tables
+export async function getTournamentByCode(tournamentCode: string) {
+  try {
+    const tournament = await db
+      .select()
+      .from(tournaments)
+      .where(eq(tournaments.tournamentCode, tournamentCode))
+      .limit(1);
+
+    return tournament.length > 0 ? tournament[0]: null;
+  } catch (error) {
+    console.error("Error al obtener ID de torneo por código:", error);
+    throw error;
+  }
+}
+
+// Actualizar estado del torneo
+export async function updateTournamentStatus(tournamentId: number, status: "Soon" | "In Progress" | "Finished") {
+  try {
+    await db
+      .update(tournaments)
+      .set({ status })
+      .where(eq(tournaments.tournamentId, tournamentId));
+
+    console.log(`Estado del torneo ${tournamentId} actualizado a ${status}`);
+  } catch (error) {
+    console.error("Error al actualizar estado de torneo:", error);
+    throw error;
+  }
+}
+
+// Seleccionar los ids de los participantes de un torneo
+export async function getParticipantsByTournamentId(tournamentId: number) {
+  try {
+    const participants_ids = await db
+      .select({ participantId: participants.participantId })
+      .from(participants)
+      .where(eq(participants.tournamentId, tournamentId));
+
+    return participants_ids;
+  } catch (error) {
+    console.error("Error al obtener participantes por ID de torneo:", error);
+    throw error;
+  }
+}
+
+// Insertar un nuevo match bracket
+export async function insertMatchBracket(
+  participant1Id: number,
+  participant2Id: number,
+  tournamentId: number,
+  homeResult: number,
+  awayResult: number,
+  status: string,
+  level: string
+) {
+  try {
+    await db.insert(matchBrackets).values({
+      participant1Id,
+      participant2Id,
+      tournamentId,
+      homeResult,
+      awayResult,
+      status,
+      level
+    });
+    console.log(`Match bracket insertado con éxito`);
+  } catch (error) {
+    console.error("Error al insertar match bracket:", error);
+    throw error;
+  }
+}
+
+// Seleccionar los match brackets de un torneo, ordenados por nivel
+export async function getMatchBracketsByTournamentId(tournamentId: number) {
+  try {
+    const matchBracketsResult = await db
+      .select()
+      .from(matchBrackets)
+      .where(eq(matchBrackets.tournamentId, tournamentId))
+      .orderBy(matchBrackets.level);
+
+    return matchBracketsResult;
+  } catch (error) {
+    console.error("Error al obtener match brackets por ID de torneo:", error);
+    throw error;
+  }
+}
+
+// obtener un participante por su id
+export async function getParticipantById(participantId: number) {
+  try {
+    const participant = await db
+      .select()
+      .from(participants)
+      .where(eq(participants.participantId, participantId))
+      .limit(1);
+
+    return participant.length > 0 ? participant[0] : null;
+  } catch (error) {
+    console.error("Error al obtener participante por ID:", error);
+    throw error;
+  }
+}
+
+// Seleccionar todos los match brackets de un torneo, ordenados por nivel
+export async function getAllMatchBracketsByTournamentId(tournamentId: number) {
+  try {
+    const matchBracketsResult = await db
+      .select()
+      .from(matchBrackets)
+      .where(eq(matchBrackets.tournamentId, tournamentId))
+      .orderBy(matchBrackets.level);
+
+    return matchBracketsResult;
+  } catch (error) {
+    console.error("Error al obtener todos los match brackets por ID de torneo:", error);
+    throw error;
+  }
+}
+
+// Crear un nuevo match bracket dentro de un torneo
+export async function createMatchBracket(
+  participant1Id: number,
+  participant2Id: number,
+  tournamentId: number,
+  homeResult: number,
+  awayResult: number,
+  status: string,
+  level: string
+) {
+  try {
+    await db.insert(matchBrackets).values({
+      participant1Id,
+      participant2Id,
+      tournamentId,
+      homeResult,
+      awayResult,
+      status,
+      level
+    });
+
+    console.log(`Match bracket creado con éxito`);
+  } catch (error) {
+    console.error("Error al crear match bracket:", error);
+    throw error;
+  }
+}
+
+export async function updateScoresByBracketId(
+  bracketId: number,
+  homeResult: number,
+  awayResult: number,
+  status: string
+) {
+  try {
+    await db
+      .update(matchBrackets)
+      .set({ homeResult, awayResult, status })
+      .where(eq(matchBrackets.matchBracketId, bracketId));
+
+    console.log(`Puntajes actualizados para match bracket ${bracketId}`);
+
+    const updatedBracket = await db
+      .select()
+      .from(matchBrackets)
+      .where(eq(matchBrackets.matchBracketId, bracketId))
+      .limit(1);
+
+    return updatedBracket.length > 0 ? updatedBracket[0] : null;
+  } catch (error) {
+    console.error("Error al actualizar puntajes por ID de bracket:", error);
+    throw error;
+  }
+}
+
+// Dentro de un torneo encontrar los participantes que no tienen un match bracket
+export async function getParticipantsWithoutMatchBracket(tournamentId: number) {
+  try {
+    const participantsWithMatchBracket = await db
+      .select({ participantId: participants.participantId })
+      .from(participants)
+      .innerJoin(matchBrackets, or(eq(participants.participantId, matchBrackets.participant1Id), eq(participants.participantId, matchBrackets.participant2Id)))
+      .where(eq(participants.tournamentId, tournamentId));
+
+    const allParticipants = await db
+      .select({ participantId: participants.participantId })
+      .from(participants)
+      .where(eq(participants.tournamentId, tournamentId));
+
+    const participantsWithoutMatchBracket = allParticipants.filter(
+      participant => !participantsWithMatchBracket.some(
+        participantWithMatchBracket => participantWithMatchBracket.participantId === participant.participantId
+      )
+    );
+
+    return participantsWithoutMatchBracket;
+  } catch (error) {
+    console.error("Error al obtener participantes sin match bracket:", error);
+    throw error;
+  }
+}

@@ -16,4 +16,6 @@ Accept: application/json
     "userMail": "diana.montero.g@ucb.edu.bo"
 }
 
-    
+###
+POST http://localhost:3000/api/dev/tournament/43477622/start
+Accept: application/json
