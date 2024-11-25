@@ -3,7 +3,7 @@ import { db, participants, getTournamentByCode } from "@/lib/db"; // Importa la 
 import { eq } from "drizzle-orm";
 
 export async function POST(req: NextRequest) {
-  try { // TODO: Esto debería estar en tournament/[tournamentCode]/join
+  try {
     const { tournamentId, participantName } = await req.json();
 
     if (!tournamentId || !participantName) {
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
         { error: "El código de torneo no es válido o no existe" },
         { status: 400 }
       );
-    } 
+    }
 
     const tournamentIdFromCode = tournamentFromCode.tournamentId;
 
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     }
 
     const result = await db.insert(participants).values({
-      tournamentId: tournamentIdFromCode, // Usamos la columna correcta "tournamentId"
+      tournamentId: tournamentIdFromCode, 
       participantName,
     });
 
@@ -55,9 +55,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-
-export const config = {
-  api: {
-    bodyParser: true, // Deja el cuerpo parseado por defecto para recibir json
-  },
-};
