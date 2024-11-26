@@ -37,6 +37,7 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
 
   const handleMatchGames = async () => {
     try {
+      // First, try starting the tournament
       const res = await fetch(`/api/dev/tournament/${tournamentId}/start`, {
         method: "POST",
       });
@@ -44,20 +45,20 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
       const data = await res.json();
   
       if (res.ok) {
-        // Save match brackets in localStorage
+        // Tournament started successfully, save match brackets
         localStorage.setItem("matchBrackets", JSON.stringify(data.matchBrackets));
   
         // Navigate to the bracket page
         const tournamentUrl = `/bracket-tournament/${tournamentId}`;
         window.open(tournamentUrl, "_blank");
       } else if (data.error === "Tournament has already started") {
-        // Tournament already started, fetch existing match brackets
+        // Tournament already started, use GET endpoint to fetch brackets
         const fetchRes = await fetch(`/api/dev/tournament/${tournamentId}/brackets`);
         const fetchData = await fetchRes.json();
   
         if (fetchRes.ok) {
           // Save existing match brackets in localStorage
-          localStorage.setItem("matchBrackets", JSON.stringify(fetchData.matchBrackets));
+          localStorage.setItem("matchBrackets", JSON.stringify(fetchData.brackets));
   
           // Navigate to the bracket page
           const tournamentUrl = `/bracket-tournament/${tournamentId}`;
