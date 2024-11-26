@@ -102,7 +102,7 @@
     return (
       <div>
         {/* Barra de navegación de secciones */}
-        <nav className="fixed top-8 left-0 w-full bg-transparent z-50">
+        <nav className="fixed top-8 left-4 w-full bg-transparent z-50">
           <div className="container mx-auto flex space-x-8">
             {[
               { label: 'Bienvenido', icon: <Info className="h-5 w-5" /> },

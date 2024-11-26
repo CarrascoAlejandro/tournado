@@ -1,6 +1,6 @@
 // app/api/dev/get-participants/[tournamentId]/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { db, participants, getTournamentIdByCode } from "@/lib/db"; // Conexión y tabla desde db.ts
+import { db, participants, getTournamentByCode } from "@/lib/db"; // Conexión y tabla desde db.ts
 import { eq } from "drizzle-orm";
 
 export async function GET(
@@ -23,19 +23,16 @@ export async function GET(
     console.log("Tournament ID received:", tournamentId);
 
     // Obtener el ID del torneo desde el código
-    const tournamentIdFromCode = await getTournamentIdByCode(tournamentId);
-    console.log("Tournament ID from code:", tournamentIdFromCode);
+    const tournamentFromCode = await getTournamentByCode(tournamentId);
 
-    if (!tournamentIdFromCode) {
-      console.error(
-        "No tournament found for the provided code:",
-        tournamentId
-      );
-      return NextResponse.json(
-        { error: "No se encontró un torneo con el código proporcionado." },
-        { status: 404 }
-      );
+    if(!tournamentFromCode) {
+      console.error("No tournament found for the provided code:", tournamentId);
+      return NextResponse.json({ error: "No se encontró un torneo con el código proporcionado." }, { status: 404 });
     }
+
+    console.log("Tournament from code:", tournamentFromCode);
+
+    const tournamentIdFromCode = tournamentFromCode.tournamentId;
 
     console.log("Querying database for participants with tournament ID:", tournamentIdFromCode);
     const tournament = await db

@@ -4,18 +4,22 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'avatars.githubusercontent.com'
+        hostname: 'avatars.githubusercontent.com',
       },
       {
         protocol: 'https',
-        hostname: '*.public.blob.vercel-storage.com'
+        hostname: '*.public.blob.vercel-storage.com',
       },
       {
         protocol: 'https',
-        hostname: 'lh3.googleusercontent.com'
-      }
-    ]
-  }
+        hostname: 'lh3.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.discordapp.com',
+      },
+    ],
+  },
 };
 
 module.exports = nextConfig;
