@@ -12,10 +12,12 @@ export function SearchInput() {
 
   function searchAction(formData: FormData) {
     let value = formData.get('q') as string;
-    let params = new URLSearchParams({ q: value });
-    startTransition(() => {
-      router.replace(`/?${params.toString()}`);
-    });
+
+    if (value) {
+      startTransition(() => {
+        router.push(`/view-tournament/${value}`);
+      });
+    }
   }
 
   return (
@@ -24,7 +26,7 @@ export function SearchInput() {
       <Input
         name="q"
         type="search"
-        placeholder="Search..."
+        placeholder="Enter tournament code..."
         className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
       />
       {isPending && <Spinner />}

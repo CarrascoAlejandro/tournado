@@ -11,7 +11,7 @@ import {
   boolean,
   date
 } from 'drizzle-orm/pg-core';
-import { count, eq, ilike } from 'drizzle-orm';
+import { not, and, or, count, eq, ilike } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
 
 export const db = drizzle(neon(process.env.POSTGRES_URL!));
@@ -217,22 +217,6 @@ export async function insertTournament(
   }
 }
 
-export async function getTournamentIdByCode(tournamentCode: string) {
-  try {
-    const tournament = await db
-      .select()
-      .from(tournaments)
-      .where(eq(tournaments.tournamentCode, tournamentCode))
-      .limit(1);
-
-    return tournament.length > 0 ? tournament[0].tournamentId : null;
-  } catch (error) {
-    console.error("Error al obtener ID de torneo por código:", error);
-    throw error;
-  }
-}
-
-// Seleccionar el id de torneo a partir del codigo de registro
 export async function getTournamentByCode(tournamentCode: string) {
   try {
     const tournament = await db
@@ -241,9 +225,9 @@ export async function getTournamentByCode(tournamentCode: string) {
       .where(eq(tournaments.tournamentCode, tournamentCode))
       .limit(1);
 
-    return tournament.length > 0 ? tournament[0] : null;
+    return tournament.length > 0 ? tournament[0]: null;
   } catch (error) {
-    console.error("Error al obtener torneo por código:", error);
+    console.error("Error al obtener ID de torneo por código:", error);
     throw error;
   }
 }
@@ -317,6 +301,120 @@ export async function getMatchBracketsByTournamentId(tournamentId: number) {
     return matchBracketsResult;
   } catch (error) {
     console.error("Error al obtener match brackets por ID de torneo:", error);
+    throw error;
+  }
+}
+
+// obtener un participante por su id
+export async function getParticipantById(participantId: number) {
+  try {
+    const participant = await db
+      .select()
+      .from(participants)
+      .where(eq(participants.participantId, participantId))
+      .limit(1);
+
+    return participant.length > 0 ? participant[0] : null;
+  } catch (error) {
+    console.error("Error al obtener participante por ID:", error);
+    throw error;
+  }
+}
+
+// Seleccionar todos los match brackets de un torneo, ordenados por nivel
+export async function getAllMatchBracketsByTournamentId(tournamentId: number) {
+  try {
+    const matchBracketsResult = await db
+      .select()
+      .from(matchBrackets)
+      .where(eq(matchBrackets.tournamentId, tournamentId))
+      .orderBy(matchBrackets.level);
+
+    return matchBracketsResult;
+  } catch (error) {
+    console.error("Error al obtener todos los match brackets por ID de torneo:", error);
+    throw error;
+  }
+}
+
+// Crear un nuevo match bracket dentro de un torneo
+export async function createMatchBracket(
+  participant1Id: number,
+  participant2Id: number,
+  tournamentId: number,
+  homeResult: number,
+  awayResult: number,
+  status: string,
+  level: string
+) {
+  try {
+    await db.insert(matchBrackets).values({
+      participant1Id,
+      participant2Id,
+      tournamentId,
+      homeResult,
+      awayResult,
+      status,
+      level
+    });
+
+    console.log(`Match bracket creado con éxito`);
+  } catch (error) {
+    console.error("Error al crear match bracket:", error);
+    throw error;
+  }
+}
+
+export async function updateScoresByBracketId(
+  bracketId: number,
+  homeResult: number,
+  awayResult: number,
+  status: string
+) {
+  try {
+    await db
+      .update(matchBrackets)
+      .set({ homeResult, awayResult, status })
+      .where(eq(matchBrackets.matchBracketId, bracketId));
+
+    console.log(`Puntajes actualizados para match bracket ${bracketId}`);
+
+    const updatedBracket = await db
+      .select()
+      .from(matchBrackets)
+      .where(eq(matchBrackets.matchBracketId, bracketId))
+      .limit(1);
+
+    return updatedBracket.length > 0 ? updatedBracket[0] : null;
+  } catch (error) {
+    console.error("Error al actualizar puntajes por ID de bracket:", error);
+    throw error;
+  }
+}
+
+// Dentro de un torneo encontrar los participantes que no tienen un match bracket
+export async function getParticipantsWithoutMatchBracket(tournamentId: number) {
+  try {
+    const participantsWithMatchBracket = await db
+      .select({ participantId: participants.participantId })
+      .from(participants)
+      .innerJoin(matchBrackets, or(eq(participants.participantId, matchBrackets.participant1Id), eq(participants.participantId, matchBrackets.participant2Id)))
+      .where(eq(participants.tournamentId, tournamentId));
+
+    const allParticipants = await db
+      .select({ participantId: participants.participantId })
+      .from(participants)
+      .where(eq(participants.tournamentId, tournamentId));
+
+    const participantsWithoutMatchBracket = allParticipants.filter(
+      participant => !participantsWithMatchBracket.some(
+        participantWithMatchBracket => participantWithMatchBracket.participantId === participant.participantId
+      )
+    );
+
+    return participantsWithoutMatchBracket;
+  } catch (error) {
+    console.error("Error al obtener participantes sin match bracket:", error);
     throw error;
   }
 }

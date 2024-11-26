@@ -1,0 +1,25 @@
+GET http://localhost:3000/api/dev/tournament/43477622/brackets
+Accept: application/json
+
+###
+PUT http://localhost:3000/api/dev/tournament/43477622/brackets
+Accept: application/json
+Content-Type: application/json
+
+{
+    "bracketId": 9,
+    "homeScore": 1,
+    "awayScore": 4,
+    "status": "finished"
+}
+
+###
+POST http://localhost:3000/api/dev/tournament/43477622/brackets
+Accept: application/json
+Content-Type: application/json
+
+{
+    "participant1Id": 59,
+    "participant2Id": 57,
+    "level": "semi"
+}
