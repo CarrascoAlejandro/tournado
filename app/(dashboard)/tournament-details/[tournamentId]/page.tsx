@@ -8,14 +8,12 @@ interface Participant {
   tournamentId: number;
 }
 
-
-
 const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
 
   const { tournamentId } = params;
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false); // Cambiar a false inicialmente
 
   const fetchParticipants = async () => {
     try {
@@ -36,6 +34,8 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
   };
 
   const handleMatchGames = async () => {
+    setLoading(true); // Activar el loading al principio de la acción
+
     try {
       // POST to start the tournament
       const startRes = await fetch(`/api/dev/tournament/${tournamentId}/start`, {
@@ -71,16 +71,17 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
       }
     } catch (err) {
       setError("Error connecting to the server.");
+    } finally {
+      setLoading(false); // Desactivar el loading una vez terminada la función
     }
-  };  
-  
+  };
+
   useEffect(() => {
     if (tournamentId) {
       fetchParticipants();
     }
   }, [tournamentId]);
 
-  // TODO: Mostrar el nombre del torneo en el título
   return (
     <div className="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-6">
       <h1 className="text-3xl font-semibold mb-6 text-center text-purple-800">Tournament Participants</h1>
@@ -95,19 +96,17 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
         <button
           className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
           onClick={handleMatchGames}
+          disabled={loading} // Deshabilitar el botón mientras se carga
         >
           Match Games
         </button>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center items-center">
-          <div className="loader"></div>
-          <p className="text-lg text-purple-700 ml-4">Loading participants...</p>
-        </div>
-      ) : error ? (
+      {error && (
         <p className="text-red-500 text-center">{error}</p>
-      ) : participants.length > 0 ? (
+      )}
+
+      {participants.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 w-full max-w-4xl">
           {participants.map((participant) => (
             <div
@@ -129,6 +128,16 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
         </div>
       ) : (
         <p className="text-gray-700 text-center">No participants registered yet.</p>
+      )}
+
+      {/* Pop-up de carga */}
+      {loading && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
+          <div className="flex flex-col items-center justify-center bg-white p-8 rounded-lg shadow-lg">
+            <div className="loader"></div> {/* Aquí puedes agregar tu animación de carga */}
+            <p className="text-lg text-purple-700 mt-4">Loading, please wait...</p>
+          </div>
+        </div>
       )}
     </div>
   );
