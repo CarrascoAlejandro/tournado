@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 import {
   Card,
   CardContent,
@@ -191,6 +192,16 @@ const TournamentsPage: React.FC = () => {
   
   
 
+
+  const handleOpenTournamentDetails = (tournamentCode: string) => {
+    if (!tournamentCode) {
+      console.error('Tournament code is missing');
+      return;
+    }
+    const tournamentUrl = `/tournament-details/${tournamentCode}`;
+    window.open(tournamentUrl, '_blank');
+  };  
+
   const handleStatusChange = (status: string) => {
     setError("");
     setFormData((prev) => ({ ...prev, status }));
@@ -238,7 +249,7 @@ const TournamentsPage: React.FC = () => {
                   <TableCell className="font-semibold">Start Date</TableCell>
                   <TableCell className="font-semibold">End Date</TableCell>
                   <TableCell className="font-semibold">Participants</TableCell>
-                  <TableCell className="font-semibold">R. Code</TableCell>
+                  <TableCell className="font-semibold">Manage Tournament</TableCell>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -256,7 +267,17 @@ const TournamentsPage: React.FC = () => {
                       <TableCell>{tournament.startDate}</TableCell>
                       <TableCell>{tournament.endDate}</TableCell>
                       <TableCell>{tournament.nMaxParticipants}</TableCell>
-                      <TableCell>{tournament.tournamentCode}</TableCell>
+                      <TableCell>                      
+                        <Button 
+                          className="bg-indigo-600 text-white text-xs px-4 py-2 rounded-lg hover:bg-indigo-700"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent triggering row click
+                            handleOpenTournamentDetails(tournament.tournamentCode);
+                          }}
+                        >
+                          View & Start
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (

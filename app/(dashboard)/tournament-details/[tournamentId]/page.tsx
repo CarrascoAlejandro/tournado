@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-
-
 interface Participant {
   participantId: number;
   participantName: string;
@@ -37,6 +35,45 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
     }
   };
 
+  const handleMatchGames = async () => {
+    try {
+      // POST to start the tournament
+      const startRes = await fetch(`/api/dev/tournament/${tournamentId}/start`, {
+        method: "POST",
+      });
+  
+      const startData = await startRes.json();
+  
+      if (startRes.ok) {
+        console.log("Tournament started successfully.");
+      } else if (startData.error === "Tournament has already started") {
+        console.log("Tournament has already started. Proceeding to fetch existing brackets.");
+      } else {
+        // Handle error from POST
+        setError(startData.error || "Error starting the tournament.");
+        return;
+      }
+  
+      // GET the latest brackets and byes
+      const fetchRes = await fetch(`/api/dev/tournament/${tournamentId}/brackets`);
+      const fetchData = await fetchRes.json();
+  
+      if (fetchRes.ok) {
+        // Save brackets and byes to localStorage
+        localStorage.setItem("matchBrackets", JSON.stringify(fetchData));
+  
+        // Navigate to the bracket page
+        const tournamentUrl = `/bracket-tournament/${tournamentId}`;
+        window.open(tournamentUrl, "_blank");
+      } else {
+        // Handle error from GET
+        setError(fetchData.error || "Error fetching tournament brackets.");
+      }
+    } catch (err) {
+      setError("Error connecting to the server.");
+    }
+  };  
+  
   useEffect(() => {
     if (tournamentId) {
       fetchParticipants();
@@ -57,7 +94,7 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
         </button>
         <button
           className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
-          onClick={() => alert('Match Games logic coming soon!')}
+          onClick={handleMatchGames}
         >
           Match Games
         </button>

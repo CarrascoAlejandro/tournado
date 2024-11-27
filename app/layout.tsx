@@ -15,8 +15,21 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="flex min-h-screen w-full flex-col">{children}</body>
-      <Analytics />
+      <head>
+        {/* Brackets Viewer CDN */}
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/brackets-viewer@latest/dist/brackets-viewer.min.css"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/brackets-viewer@latest/dist/brackets-viewer.min.js"
+          defer
+        ></script>
+      </head>
+      <body className="flex min-h-screen w-full flex-col">
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }
