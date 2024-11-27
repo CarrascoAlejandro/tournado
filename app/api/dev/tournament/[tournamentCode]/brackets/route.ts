@@ -1,137 +1,125 @@
-import { createMatchBracket, getMatchBracketsByTournamentId, getTournamentByCode, updateScoresByBracketId, getParticipantsWithoutMatchBracket, getTournamentIdByCode, getTournamentNameByCode } from "@/lib/db";
+import {
+    getTournamentByCode,
+    getAllParticipantsByTournamentId,
+    getGroupsByTournamentId,
+    getRoundsByGroupId,
+    getMatchesByRoundId,
+    getMatchGamesByMatchId,
+  } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
-import { CreateBracketInput, UpdateBracketInput } from "types/bracketInput";
 
 export async function GET(req: NextRequest, { params }: { params: { tournamentCode: string } }) {
     try {
-      const { tournamentCode } = params;
-  
-      if (!tournamentCode) {
-        return NextResponse.json({ error: 'Tournament Code is required' }, { status: 400 });
-      }
-  
-      const tournamentId = await getTournamentIdByCode(tournamentCode);
-  
-      if (!tournamentId) {
-        return NextResponse.json({ error: 'Tournament not found' }, { status: 404 });
-      }
-  
-      const brackets = await getMatchBracketsByTournamentId(tournamentId);
-  
-      if (!brackets || brackets.length === 0) {
-        return NextResponse.json({ error: 'No brackets found' }, { status: 404 });
-      }
-  
-      const byes = await getParticipantsWithoutMatchBracket(tournamentId);
-      
-      const tournamentName = await getTournamentNameByCode(tournamentCode);
-
-      if (!tournamentName) {
-        return NextResponse.json({ error: 'Tournament name not found' }, { status: 404 });
-      }
-
-      return NextResponse.json({ brackets, byes, tournamentId, tournamentName }, { status: 200 });
-    } catch (error) {
-      console.error('Error getting brackets:', error);
-      return NextResponse.json(
-        { error: 'Internal Server Error. Please try again later.' },
-        { status: 500 }
-      );
-    }
-}
-  
-
-export async function POST(req: NextRequest, { params }: { params: { tournamentCode: string } }) {
-    try {
         const { tournamentCode } = params;
 
-        console.log("tournamentCode: ", tournamentCode);
-
-        if (!tournamentCode) {
-            return NextResponse.json({ error: "Tournament Code is required" }, { status: 400 });
-        }
-
+        // Fetch tournament details
         const tournament = await getTournamentByCode(tournamentCode);
-
-        if (!tournament || !tournament.tournamentId) {
-            return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
+        if (!tournament) {
+        return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
         }
 
-        console.log("tournament details: ", tournament);
+        const tournamentId = tournament.tournamentId;
 
-        const { participant1Id, participant2Id, level } : CreateBracketInput = await req.json();
+        // Fetch participants
+        const participants = await getAllParticipantsByTournamentId(tournamentId);
 
-        console.log("body: ", { participant1Id, participant2Id, level });
-
-        if (!participant1Id || !participant2Id || !level) {
-            return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+        // Fetch groups
+        const groups = await getGroupsByTournamentId(tournamentId);
+        if (groups.length === 0) {
+            return NextResponse.json({ error: "Tournament don't started yet" }, { status: 404 });
         }
 
-        // Create bracket
-        const bracket = await createMatchBracket(
-            participant1Id,
-            participant2Id,
-            tournament.tournamentId,
-            0,
-            0,
-            "pending",
-            level,
-        )
+        // Build the response
+        const response: any = {
+        participant: participants.map((participant) => ({
+            id: participant.participantId,
+            tournament_id: tournamentId,
+            name: participant.participantName,
+        })),
+        stage: [
+            {
+            id: tournamentId, // Assuming stage ID is the same as the tournament ID
+            tournament_id: tournamentId,
+            name: tournament.tournamentName,
+            type: "single_elimination", // Hardcoded based on your implementation
+            settings: {
+                size: participants.length,
+                seedOrdering: ["natural"],
+            },
+            number: 1,
+            },
+        ],
+        group: [],
+        round: [],
+        match: [],
+        match_game: [],
+        };
 
-        console.log("bracket: ", bracket);
+        // Fetch data for each group
+        for (const group of groups) {
+        response.group.push({
+            id: group.groupId,
+            stage_id: tournamentId,
+            number: group.groupNumber,
+        });
 
-        return NextResponse.json({ bracket }, { status: 200 });
+        const rounds = await getRoundsByGroupId(group.groupId);
+
+        // Fetch data for each round
+        for (const round of rounds) {
+            response.round.push({
+            id: round.roundId,
+            stage_id: tournamentId,
+            group_id: group.groupId,
+            number: round.roundNumber,
+            });
+
+            const matches = await getMatchesByRoundId(round.roundId);
+
+            // Fetch data for each match
+            for (const match of matches) {
+                response.match.push({
+                    id: match.matchId,
+                    stage_id: tournamentId,
+                    group_id: group.groupId,
+                    round_id: round.roundId,
+                    number: match.matchNumber,
+                    child_count: 0, // Assuming no "Best Of" matches unless specified
+                    status: match.status,
+                    opponent1: match.participant1Id
+                      ? match.participant1Id === "EMPTY_SPOT"
+                        ? { id: null }
+                        : { id: Number(match.participant1Id) }
+                      : null,
+                    opponent2: match.participant2Id
+                      ? match.participant2Id === "EMPTY_SPOT"
+                        ? { id: null }
+                        : { id: Number(match.participant2Id) }
+                      : null,
+                  });
+                  
+
+            const matchGames = await getMatchGamesByMatchId(match.matchId);
+
+            // Fetch data for each match game
+            for (const game of matchGames) {
+                response.match_game.push({
+                id: game.matchGameId,
+                stage_id: tournamentId,
+                parent_id: match.matchId,
+                number: response.match_game.length + 1,
+                participant1Score: game.participant1Score,
+                participant2Score: game.participant2Score,
+                gameStatus: game.gameStatus,
+                });
+            }
+            }
+        }
+        }
+
+        return NextResponse.json(response);
     } catch (error) {
-        console.error("Error creating bracket:", error);
-        return NextResponse.json(
-            { error: "Internal Server Error. Please try again later." },
-            { status: 500 }
-        );
+        console.error("Error fetching tournament data:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
-
-export async function PUT(req: NextRequest, { params }: { params: { tournamentCode: string }} ) {
-    try {
-        const { tournamentCode } = params;
-
-        console.log("tournamentCode: ", tournamentCode);
-
-        if (!tournamentCode) {
-            return NextResponse.json({ error: "Tournament Code is required" }, { status: 400 });
-        }
-
-        const tournament = await getTournamentByCode(tournamentCode);
-
-        if (!tournament || !tournament.tournamentId) {
-            return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
-        }
-
-        console.log("tournament details: ", tournament);
-
-        const { bracketId, awayScore, homeScore, status } : UpdateBracketInput = await req.json()
-
-        console.log("body: ", { bracketId, awayScore, homeScore, status });
-
-        if (bracketId == null || awayScore == null || homeScore == null || status == null) {
-            return NextResponse.json({ error: "Invalid input" }, { status: 400 });
-        }
-
-        // Update bracket
-        const bracket = await updateScoresByBracketId(
-            bracketId,
-            homeScore,
-            awayScore,
-            status
-        )
-
-        console.log("bracket: ", bracket);
-
-        return NextResponse.json({ bracket }, { status: 200 });
-    } catch (error) {
-        console.error("Error updating bracket:", error);
-        return NextResponse.json(
-            { error: "Internal Server Error. Please try again later." },
-            { status: 500 }
-        );
-    }
-} 

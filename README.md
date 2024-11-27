@@ -56,125 +56,150 @@ El proyecto se puede levantar con el siguiente comando:
 pnpm dev
 ```
 
+# Lib Brackets Viewer.js
 
-## Brackets Model
+https://github.com/Drarig29/brackets-viewer.js
+---
+
+## Features
+
+- **Dynamic Bracket Management**: Supports single/double elimination and round-robin tournaments.
+- **Flexible Data Models**: Customize and integrate stages, rounds, groups, matches, and games.
+- **Easy Integration**: Add tournament brackets seamlessly to your web applications.
+- **Extensible Design**: Easily extend functionality to include metadata or custom visualizations.
+
+---
+
+## Installation
+
+```bash
+npm install brackets-viewer.js
+```
+
+---
+
+## Data Model Overview
+
+This library uses a structured data model to define the elements of a tournament. Below are the key entities:
+
+### Participant
+
+Represents a team or individual competing in the tournament.
 
 ```ts
-/*-----------------------------------------------------------------|
- * Contains the types which are persisted in the chosen storage.
- *----------------------------------------------------------------*/
-
-import { StageSettings } from './input';
-import { MatchResults } from './other';
-import { Id, StageType } from './unions';
-
-/**
- * A participant of a stage (team or individual).
- */
-export interface Participant {
-    /** ID of the participant. */
-    id: Id,
-
-    /** ID of the tournament this participant belongs to. */
-    tournament_id: Id,
-
-    /** Name of the participant. */
-    name: string,
-}
-
-/**
- * A stage, which can be a round-robin stage or a single/double elimination stage.
- */
-export interface Stage {
-    /** ID of the stage. */
-    id: Id,
-
-    /** ID of the tournament this stage belongs to. */
-    tournament_id: Id,
-
-    /** Name of the stage. */
-    name: string,
-
-    /** Type of the stage. */
-    type: StageType,
-
-    /** Settings of the stage. */
-    settings: StageSettings,
-
-    /** The number of the stage in its tournament. */
-    number: number,
-}
-
-/**
- * A group of a stage.
- */
-export interface Group {
-    /** ID of the group. */
-    id: Id,
-
-    /** ID of the parent stage. */
-    stage_id: Id,
-
-    /** The number of the group in its stage. */
-    number: number,
-}
-
-// The next levels don't have a `name` property. They are automatically named with their `number` and their context (parent levels).
-
-/**
- * A round of a group.
- */
-export interface Round {
-    /** ID of the round. */
-    id: Id,
-
-    /** ID of the parent stage. */
-    stage_id: Id,
-
-    /** ID of the parent group. */
-    group_id: Id,
-
-    /** The number of the round in its group. */
-    number: number,
-}
-
-/**
- * A match of a round.
- */
-export interface Match extends MatchResults {
-    /** ID of the match. */
-    id: Id,
-
-    /** ID of the parent stage. */
-    stage_id: Id,
-
-    /** ID of the parent group. */
-    group_id: Id,
-
-    /** ID of the parent round. */
-    round_id: Id,
-
-    /** The number of the match in its round. */
-    number: number,
-
-    /** The count of match games this match has. Can be `0` if it's a simple match, or a positive number for "Best Of" matches. */
-    child_count: number,
-}
-
-/**
- * A game of a match.
- */
-export interface MatchGame extends MatchResults {
-    /** ID of the match game. */
-    id: Id,
-
-    /** ID of the parent stage. */
-    stage_id: Id,
-
-    /** ID of the parent match. */
-    parent_id: Id,
-
-    /** The number of the match game in its parent match. */
-    number: number,
+interface Participant {
+    id: string;
+    tournament_id: string;
+    name: string;
 }
 ```
+
+### Stage
+
+Defines a stage in the tournament (e.g., round-robin, single elimination).
+
+```ts
+interface Stage {
+    id: string;
+    tournament_id: string;
+    name: string;
+    type: 'round-robin' | 'single-elimination' | 'double-elimination';
+    settings: StageSettings;
+    number: number;
+}
+```
+
+### Group
+
+Groups are logical units within a stage.
+
+- **Round-robin stages**: Groups represent pools.
+- **Elimination stages**: Groups represent brackets.
+
+```ts
+interface Group {
+    id: string;
+    stage_id: string;
+    number: number;
+}
+```
+
+### Round
+
+Rounds group matches together within a stage.
+
+```ts
+interface Round {
+    id: string;
+    stage_id: string;
+    group_id: string;
+    number: number;
+}
+```
+
+### Match
+
+Defines a competition between two participants.
+
+```ts
+interface Match {
+    id: string;
+    stage_id: string;
+    group_id: string;
+    round_id: string;
+    number: number;
+    child_count: number; // Number of games in a "Best Of" match.
+}
+```
+
+### Match Game
+
+Represents a single game within a "Best Of" match.
+
+```ts
+interface MatchGame {
+    id: string;
+    stage_id: string;
+    parent_id: string;
+    number: number;
+}
+```
+
+---
+
+## Bracket Data Diagram (BDD)
+
+Below is a visual representation of how data flows through the library:
+
+![Bracket Data Diagram](static/image.png)
+
+---
+
+## Key Concepts
+
+### Groups in Elimination Stages
+
+- **Single Elimination**:
+  - Main Bracket.
+  - Consolation Final (optional).
+  
+- **Double Elimination**:
+  - Upper Bracket.
+  - Lower Bracket.
+  - Grand Final (optional).
+
+### Round
+- **Round-robin stages**: A collection of matches that can occur simultaneously.
+- **Elimination stages**: Represents stages like quarter-finals or semi-finals.
+
+### Match
+- A competition between two participants.
+
+### Match Game
+- A sub-match within a "Best Of" series.
+
+### BYE
+- A placeholder used to balance tournament brackets when the number of participants is not a power of two.
+
+---
+

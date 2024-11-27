@@ -120,16 +120,38 @@ export const participants = pgTable('participant', {
   tournamentId: integer('tournament_id').notNull()
 });
 
-export const matchBrackets = pgTable('match_bracket', {
-  matchBracketId: serial('match_bracket_id').primaryKey(),
-  participant1Id: integer('participant_1_id').notNull(),
-  participant2Id: integer('participant_2_id').notNull(),
-  tournamentId: integer('tournament_id').notNull(),
-  homeResult: integer('home_result').notNull(),
-  awayResult: integer('away_result').notNull(),
-  status: text('status').notNull(),
-  level: text('level').notNull()
+export const tournamentGroups = pgTable('tournament_groups', {
+  groupId: serial('group_id').primaryKey(),
+  tournamentId: integer('tournament_id').notNull(), // Foreign key to tournaments
+  groupNumber: integer('group_number').notNull(), // Logical grouping within the tournament
 });
+
+export const rounds = pgTable('round', {
+  roundId: serial('round_id').primaryKey(),
+  groupId: integer('group_id').notNull(), // Foreign key to groups
+  roundNumber: integer('round_number').notNull() // Order of the round in the group
+});
+
+export const matchBracket = pgTable('match_bracket', {
+  matchId: serial('match_id').primaryKey(),
+  roundId: integer('round_id').notNull(), // Foreign key to rounds
+  participant1Id: text('participant_1_id'), // Can be NULL, participant ID, or "EMPTY_SPOT"
+  participant2Id: text('participant_2_id'), // Can be NULL, participant ID, or "EMPTY_SPOT"
+  homeResult: integer('home_result').default(0),
+  awayResult: integer('away_result').default(0),
+  status: text('status').notNull(), // Example: "pending" or "completed"
+  matchNumber: integer('match_number').notNull(), // Order of the match in the round
+});
+
+export const matchGames = pgTable('match_game', {
+  matchGameId: serial('match_game_id').primaryKey(),
+  matchId: integer('match_id').notNull(), // Foreign key to matches
+  participant1Score: integer('participant_1_score').default(0),
+  participant2Score: integer('participant_2_score').default(0),
+  gameStatus: text('game_status').notNull() // Example: "in_progress" or "finished"
+});
+
+
 
 export type SelectTournament =  typeof tournaments.$inferSelect
 export const insertTournamentSchema = createInsertSchema(tournaments);
@@ -262,45 +284,16 @@ export async function getParticipantsByTournamentId(tournamentId: number) {
   }
 }
 
-// Insertar un nuevo match bracket
-export async function insertMatchBracket(
-  participant1Id: number,
-  participant2Id: number,
-  tournamentId: number,
-  homeResult: number,
-  awayResult: number,
-  status: string,
-  level: string
-) {
+// Seleccionar los participantes de un torneo
+export async function getAllParticipantsByTournamentId(tournamentId: number) {
   try {
-    await db.insert(matchBrackets).values({
-      participant1Id,
-      participant2Id,
-      tournamentId,
-      homeResult,
-      awayResult,
-      status,
-      level
-    });
-    console.log(`Match bracket insertado con éxito`);
-  } catch (error) {
-    console.error("Error al insertar match bracket:", error);
-    throw error;
-  }
-}
-
-// Seleccionar los match brackets de un torneo, ordenados por nivel
-export async function getMatchBracketsByTournamentId(tournamentId: number) {
-  try {
-    const matchBracketsResult = await db
+    const all_participants = await db
       .select()
-      .from(matchBrackets)
-      .where(eq(matchBrackets.tournamentId, tournamentId))
-      .orderBy(matchBrackets.level);
-
-    return matchBracketsResult;
+      .from(participants)
+      .where(eq(participants.tournamentId, tournamentId));
+    return all_participants;
   } catch (error) {
-    console.error("Error al obtener match brackets por ID de torneo:", error);
+    console.error("Error al obtener participantes por ID de torneo:", error);
     throw error;
   }
 }
@@ -317,104 +310,6 @@ export async function getParticipantById(participantId: number) {
     return participant.length > 0 ? participant[0] : null;
   } catch (error) {
     console.error("Error al obtener participante por ID:", error);
-    throw error;
-  }
-}
-
-// Seleccionar todos los match brackets de un torneo, ordenados por nivel
-export async function getAllMatchBracketsByTournamentId(tournamentId: number) {
-  try {
-    const matchBracketsResult = await db
-      .select()
-      .from(matchBrackets)
-      .where(eq(matchBrackets.tournamentId, tournamentId))
-      .orderBy(matchBrackets.level);
-
-    return matchBracketsResult;
-  } catch (error) {
-    console.error("Error al obtener todos los match brackets por ID de torneo:", error);
-    throw error;
-  }
-}
-
-// Crear un nuevo match bracket dentro de un torneo
-export async function createMatchBracket(
-  participant1Id: number,
-  participant2Id: number,
-  tournamentId: number,
-  homeResult: number,
-  awayResult: number,
-  status: string,
-  level: string
-) {
-  try {
-    await db.insert(matchBrackets).values({
-      participant1Id,
-      participant2Id,
-      tournamentId,
-      homeResult,
-      awayResult,
-      status,
-      level
-    });
-
-    console.log(`Match bracket creado con éxito`);
-  } catch (error) {
-    console.error("Error al crear match bracket:", error);
-    throw error;
-  }
-}
-
-export async function updateScoresByBracketId(
-  bracketId: number,
-  homeResult: number,
-  awayResult: number,
-  status: string
-) {
-  try {
-    await db
-      .update(matchBrackets)
-      .set({ homeResult, awayResult, status })
-      .where(eq(matchBrackets.matchBracketId, bracketId));
-
-    console.log(`Puntajes actualizados para match bracket ${bracketId}`);
-
-    const updatedBracket = await db
-      .select()
-      .from(matchBrackets)
-      .where(eq(matchBrackets.matchBracketId, bracketId))
-      .limit(1);
-
-    return updatedBracket.length > 0 ? updatedBracket[0] : null;
-  } catch (error) {
-    console.error("Error al actualizar puntajes por ID de bracket:", error);
-    throw error;
-  }
-}
-
-// Dentro de un torneo encontrar los participantes que no tienen un match bracket
-export async function getParticipantsWithoutMatchBracket(tournamentId: number) {
-  try {
-    const participantsWithMatchBracket = await db
-      .select({ participantId: participants.participantId })
-      .from(participants)
-      .innerJoin(matchBrackets, or(eq(participants.participantId, matchBrackets.participant1Id), eq(participants.participantId, matchBrackets.participant2Id)))
-      .where(eq(participants.tournamentId, tournamentId));
-
-    const allParticipants = await db
-      .select({ participantId: participants.participantId })
-      .from(participants)
-      .where(eq(participants.tournamentId, tournamentId));
-
-    const participantsWithoutMatchBracket = allParticipants.filter(
-      participant => !participantsWithMatchBracket.some(
-        participantWithMatchBracket => participantWithMatchBracket.participantId === participant.participantId
-      )
-    );
-
-    return participantsWithoutMatchBracket;
-  } catch (error) {
-    console.error("Error al obtener participantes sin match bracket:", error);
     throw error;
   }
 }
@@ -451,6 +346,112 @@ export async function getTournamentNameByCode(tournamentCode: string) {
     return tournament.length > 0 ? tournament[0].tournamentName : null;
   } catch (error) {
     console.error("Error al obtener nombre de torneo por código:", error);
+    throw error;
+  }
+}
+
+
+// Insert a group
+export async function insertGroup(tournamentId: number, groupNumber: number) {
+  try {
+    await db.insert(tournamentGroups).values({ tournamentId, groupNumber });
+    console.log(`Group ${groupNumber} for tournament ${tournamentId} inserted successfully`);
+  } catch (error) {
+    console.error("Error inserting group:", error);
+    throw error;
+  }
+}
+
+// Fetch all groups for a specific tournament
+export async function getGroupsByTournamentId(tournamentId: number) {
+  try {
+    const groupsResult = await db
+      .select()
+      .from(tournamentGroups)
+      .where(eq(tournamentGroups.tournamentId, tournamentId));
+
+    return groupsResult;
+  } catch (error) {
+    console.error("Error fetching groups by tournament ID:", error);
+    throw error;
+  }
+}
+
+// Insert a round
+export async function insertRound(groupId: number, roundNumber: number) {
+  try {
+    await db.insert(rounds).values({ groupId, roundNumber });
+    console.log(`Round ${roundNumber} for group ${groupId} inserted successfully`);
+  } catch (error) {
+    console.error("Error inserting round:", error);
+    throw error;
+  }
+}
+
+// Fetch all rounds for a specific group
+export async function getRoundsByGroupId(groupId: number) {
+  try {
+    const roundsResult = await db
+      .select()
+      .from(rounds)
+      .where(eq(rounds.groupId, groupId));
+
+    return roundsResult;
+  } catch (error) {
+    console.error("Error fetching rounds by group ID:", error);
+    throw error;
+  }
+}
+
+// Insert a match
+export async function insertMatch(roundId: number, participant1Id: number | null, participant2Id: number | null, matchNumber: number) {
+  try {
+    await db.insert(matchBracket).values({ roundId, participant1Id, participant2Id, status: "pending", matchNumber, homeResult: 0, awayResult: 0 });
+    console.log(`Match for round ${roundId} inserted successfully`);
+  } catch (error) {
+    console.error("Error inserting match:", error);
+    throw error;
+  }
+}
+
+// Fetch all matches for a specific round
+export async function getMatchesByRoundId(roundId: number) {
+  try {
+    const matchesResult = await db
+      .select()
+      .from(matchBracket)
+      .where(eq(matchBracket.roundId, roundId));
+
+    return matchesResult;
+  } catch (error) {
+    console.error("Error fetching matches by round ID:", error);
+    throw error;
+  }
+}
+
+
+// Insert a match game
+export async function insertMatchGame(matchId: number, participant1Score: number, participant2Score: number, gameStatus: string) {
+  try {
+    await db.insert(matchGames).values({ matchId, participant1Score, participant2Score, gameStatus });
+    console.log(`Match game for match ${matchId} inserted successfully`);
+  } catch (error) {
+    console.error("Error inserting match game:", error);
+    throw error;
+  }
+}
+
+// Fetch all match games for a specific match
+export async function getMatchGamesByMatchId(matchId: number) {
+  try {
+    const matchGamesResult = await db
+      .select()
+      .from(matchGames)
+      .where(eq(matchGames.matchId, matchId));
+
+    return matchGamesResult;
+  } catch (error) {
+    console.error("Error fetching match games by match ID:", error);
     throw error;
   }
 }

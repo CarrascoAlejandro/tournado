@@ -217,7 +217,7 @@ const TournamentsPage: React.FC = () => {
                             handleOpenTournamentDetails(tournament.tournamentCode);
                           }}
                         >
-                          View & Edit
+                          View & Start
                         </Button>
                       </TableCell>
                     </TableRow>

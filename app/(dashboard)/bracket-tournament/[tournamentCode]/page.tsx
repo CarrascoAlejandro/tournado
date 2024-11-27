@@ -1,8 +1,6 @@
 "use client";
 
-import { participants } from "@/lib/db";
 import React, { useEffect } from "react";
-import { transformDataForBracketsViewer } from "utils/create-tournament";
 
 const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
   const { tournamentCode } = params;
@@ -19,22 +17,17 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
       const tournamentData = await res.json();
       console.log("Fetched tournament data:", tournamentData);
 
-      // Transform data for brackets-viewer
-      const transformedData = transformDataForBracketsViewer(tournamentData);
-
-      console.log("Transformed data for brackets-viewer:", transformedData);
-
+      // Render the brackets using the fetched data
       if (window.bracketsViewer) {
-        const transformedData = transformDataForBracketsViewer(tournamentData);
-      
         window.bracketsViewer.render({
-          stages: transformedData.stage,
-          matches: transformedData.match,
-          matchGames: transformedData.match_game,
-          participants: transformedData.participant,
+          stages: tournamentData.stage,
+          matches: tournamentData.match,
+          matchGames: tournamentData.match_game,
+          participants: tournamentData.participant,
         });
+      } else {
+        console.error("bracketsViewer is not defined on the window object.");
       }
-      
     } catch (error) {
       console.error("Error fetching or rendering brackets:", error);
     }
