@@ -92,8 +92,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       console.log('Sign in event:', message);
     },
     async signOut(message) {
+
       console.log('Sign out event:', message);
     }
   },
-  debug: true, // Activa el modo de depuración para más detalles
 });
