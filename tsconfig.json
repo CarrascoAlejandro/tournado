@@ -25,6 +25,13 @@
       }
     ]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/api/join-tournament.js"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "app/api/join-tournament.js",
+    "types/**/*.d.ts"
+  ],
   "exclude": ["node_modules"]
 }

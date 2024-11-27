@@ -418,3 +418,39 @@ export async function getParticipantsWithoutMatchBracket(tournamentId: number) {
     throw error;
   }
 }
+
+/**
+ * Fetch the tournamentId based on the provided tournamentCode.
+ * @param tournamentCode The unique code for the tournament.
+ * @returns The tournamentId if found; otherwise, null.
+ */
+export async function getTournamentIdByCode(tournamentCode: string): Promise<number | null> {
+  try {
+    const result = await db
+      .select({ tournamentId: tournaments.tournamentId })
+      .from(tournaments)
+      .where(eq(tournaments.tournamentCode, tournamentCode))
+      .limit(1);
+
+    return result.length > 0 ? result[0].tournamentId : null;
+  } catch (error) {
+    console.error('Error fetching tournamentId by code:', error);
+    throw error;
+  }
+}
+
+
+export async function getTournamentNameByCode(tournamentCode: string) {
+  try {
+    const tournament = await db
+      .select()
+      .from(tournaments)
+      .where(eq(tournaments.tournamentCode, tournamentCode))
+      .limit(1);
+
+    return tournament.length > 0 ? tournament[0].tournamentName : null;
+  } catch (error) {
+    console.error("Error al obtener nombre de torneo por código:", error);
+    throw error;
+  }
+}

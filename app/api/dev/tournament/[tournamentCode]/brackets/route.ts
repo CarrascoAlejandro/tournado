@@ -1,46 +1,45 @@
-import { createMatchBracket, getMatchBracketsByTournamentId, getTournamentByCode, updateScoresByBracketId, getParticipantsWithoutMatchBracket } from "@/lib/db";
+import { createMatchBracket, getMatchBracketsByTournamentId, getTournamentByCode, updateScoresByBracketId, getParticipantsWithoutMatchBracket, getTournamentIdByCode, getTournamentNameByCode } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { CreateBracketInput, UpdateBracketInput } from "types/bracketInput";
 
 export async function GET(req: NextRequest, { params }: { params: { tournamentCode: string } }) {
     try {
-        const { tournamentCode } = params;
+      const { tournamentCode } = params;
+  
+      if (!tournamentCode) {
+        return NextResponse.json({ error: 'Tournament Code is required' }, { status: 400 });
+      }
+  
+      const tournamentId = await getTournamentIdByCode(tournamentCode);
+  
+      if (!tournamentId) {
+        return NextResponse.json({ error: 'Tournament not found' }, { status: 404 });
+      }
+  
+      const brackets = await getMatchBracketsByTournamentId(tournamentId);
+  
+      if (!brackets || brackets.length === 0) {
+        return NextResponse.json({ error: 'No brackets found' }, { status: 404 });
+      }
+  
+      const byes = await getParticipantsWithoutMatchBracket(tournamentId);
+      
+      const tournamentName = await getTournamentNameByCode(tournamentCode);
 
-        console.log("tournamentCode: ", tournamentCode);
+      if (!tournamentName) {
+        return NextResponse.json({ error: 'Tournament name not found' }, { status: 404 });
+      }
 
-        if (!tournamentCode) {
-            return NextResponse.json({ error: "Tournament Code is required" }, { status: 400 });
-        }
-
-        const tournament = await getTournamentByCode(tournamentCode);
-
-        if (!tournament || !tournament.tournamentId) {
-            return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
-        }
-
-        console.log("tournament details: ", tournament);
-
-        const brackets = await getMatchBracketsByTournamentId(tournament.tournamentId);
-
-        if (!brackets || brackets.length === 0) {
-            return NextResponse.json({ error: "No brackets found" }, { status: 404 });
-        }
-
-        console.log("brackets: ", brackets);
-
-        // find participants not matched to a bracket
-        const byes = await getParticipantsWithoutMatchBracket(tournament.tournamentId);
-
-
-        return NextResponse.json({ brackets, byes }, { status: 200 });
+      return NextResponse.json({ brackets, byes, tournamentId, tournamentName }, { status: 200 });
     } catch (error) {
-        console.error("Error getting brackets:", error);
-        return NextResponse.json(
-            { error: "Internal Server Error. Please try again later." },
-            { status: 500 }
-        );
+      console.error('Error getting brackets:', error);
+      return NextResponse.json(
+        { error: 'Internal Server Error. Please try again later.' },
+        { status: 500 }
+      );
     }
 }
+  
 
 export async function POST(req: NextRequest, { params }: { params: { tournamentCode: string } }) {
     try {

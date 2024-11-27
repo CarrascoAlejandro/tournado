@@ -37,43 +37,42 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
 
   const handleMatchGames = async () => {
     try {
-      // First, try starting the tournament
-      const res = await fetch(`/api/dev/tournament/${tournamentId}/start`, {
+      // POST to start the tournament
+      const startRes = await fetch(`/api/dev/tournament/${tournamentId}/start`, {
         method: "POST",
       });
   
-      const data = await res.json();
+      const startData = await startRes.json();
   
-      if (res.ok) {
-        // Tournament started successfully, save match brackets
-        localStorage.setItem("matchBrackets", JSON.stringify(data.matchBrackets));
+      if (startRes.ok) {
+        console.log("Tournament started successfully.");
+      } else if (startData.error === "Tournament has already started") {
+        console.log("Tournament has already started. Proceeding to fetch existing brackets.");
+      } else {
+        // Handle error from POST
+        setError(startData.error || "Error starting the tournament.");
+        return;
+      }
+  
+      // GET the latest brackets and byes
+      const fetchRes = await fetch(`/api/dev/tournament/${tournamentId}/brackets`);
+      const fetchData = await fetchRes.json();
+  
+      if (fetchRes.ok) {
+        // Save brackets and byes to localStorage
+        localStorage.setItem("matchBrackets", JSON.stringify(fetchData));
   
         // Navigate to the bracket page
         const tournamentUrl = `/bracket-tournament/${tournamentId}`;
         window.open(tournamentUrl, "_blank");
-      } else if (data.error === "Tournament has already started") {
-        // Tournament already started, use GET endpoint to fetch brackets
-        const fetchRes = await fetch(`/api/dev/tournament/${tournamentId}/brackets`);
-        const fetchData = await fetchRes.json();
-  
-        if (fetchRes.ok) {
-          // Save existing match brackets in localStorage
-          localStorage.setItem("matchBrackets", JSON.stringify(fetchData.brackets));
-  
-          // Navigate to the bracket page
-          const tournamentUrl = `/bracket-tournament/${tournamentId}`;
-          window.open(tournamentUrl, "_blank");
-        } else {
-          setError(fetchData.error || "Error fetching existing tournament data.");
-        }
       } else {
-        setError(data.error || "Error starting the tournament.");
+        // Handle error from GET
+        setError(fetchData.error || "Error fetching tournament brackets.");
       }
     } catch (err) {
       setError("Error connecting to the server.");
     }
-  };
-  
+  };  
   
   useEffect(() => {
     if (tournamentId) {

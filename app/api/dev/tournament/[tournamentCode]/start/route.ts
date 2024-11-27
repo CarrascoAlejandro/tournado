@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getParticipantsByTournamentId, getTournamentByCode, insertMatchBracket, getMatchBracketsByTournamentId, updateTournamentStatus } from "@/lib/db";
-import { getMatchLevel, makePairs } from "@/lib/utils";
+import { getMatchLevel, makePairs } from "utils/make-matches";
 
 
 export async function POST(req: NextRequest, { params }: { params: { tournamentCode: string } }) {
