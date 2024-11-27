@@ -76,13 +76,13 @@ const JoinTournamentPage: React.FC = () => {
                 htmlFor="tournamentId"
                 className="block text-md font-semibold text-gray-800"
               >
-                Tournament ID
+                Tournament CODE
               </label>
               <Input
                 type="text"
                 id="tournamentId"
                 name="tournamentId"
-                placeholder="Enter the tournament ID"
+                placeholder="Enter the tournament CODE"
                 className="mt-2 block w-full border-gray-300 rounded-lg shadow-md focus:ring-purple-500 focus:border-purple-500 transition-colors"
                 value={tournamentId}
                 onChange={(e) => setTournamentId(e.target.value)}

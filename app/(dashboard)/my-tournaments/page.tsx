@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 import {
   Card,
   CardContent,
@@ -29,7 +30,7 @@ const TournamentsPage: React.FC = () => {
   const [formData, setFormData] = useState({
     tournamentCode:'',
     tournamentName: '',
-    status: '',
+    status: 'Soon',
     startDate: '',
     endDate: '',
     nMaxParticipants: 2,
@@ -128,10 +129,78 @@ const TournamentsPage: React.FC = () => {
     });
   };
 
+  const isValidDate = (date: string): boolean => {
+    const selectedDate = new Date(date);
+    const today = new Date();
+  
+    // Agregamos 4 horas y 1 minuto al selectedDate
+    selectedDate.setHours(selectedDate.getHours() + 4);
+    selectedDate.setMinutes(selectedDate.getMinutes() + 1);
+  
+    // Normalizamos "today" al inicio del día (00:00:00)
+    today.setHours(0, 0, 0, 0);
+  
+    const isValid = selectedDate >= today; // Comparamos solo los días normalizados en relación con today
+    console.log("Validating date:", {
+      selectedDate,
+      today,
+      isValid,
+    });
+  
+    return isValid;
+  };
+  
+  
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    console.log(`Changing field: ${name}, Value: ${value}`);
+  
+    if (name === 'startDate') {
+      if (!isValidDate(value)) {
+        console.log("Invalid start date:", value);
+        alert("Start Date cannot be in the past.");
+        return;
+      }
+    }
+  
+    if (name === 'endDate') {
+      if (!isValidDate(value)) {
+        console.log("Invalid end date:", value);
+        alert("End Date cannot be in the past.");
+        return;
+      }
+      if (formData.startDate && new Date(value) < new Date(formData.startDate)) {
+        console.log("End date earlier than start date:", {
+          endDate: value,
+          startDate: formData.startDate,
+        });
+        alert("End Date cannot be earlier than Start Date.");
+        return;
+      }
+    }
+  
+    setFormData((prev) => {
+      const updatedFormData = { ...prev, [name]: value };
+      console.log("Updated form data:", updatedFormData);
+      return updatedFormData;
+    });
   };
+  
+
+  
+  
+  
+
+
+  const handleOpenTournamentDetails = (tournamentCode: string) => {
+    if (!tournamentCode) {
+      console.error('Tournament code is missing');
+      return;
+    }
+    const tournamentUrl = `/tournament-details/${tournamentCode}`;
+    window.open(tournamentUrl, '_blank');
+  };  
 
   const handleStatusChange = (status: string) => {
     setError("");
@@ -180,7 +249,7 @@ const TournamentsPage: React.FC = () => {
                   <TableCell className="font-semibold">Start Date</TableCell>
                   <TableCell className="font-semibold">End Date</TableCell>
                   <TableCell className="font-semibold">Participants</TableCell>
-                  <TableCell className="font-semibold">R. Code</TableCell>
+                  <TableCell className="font-semibold">Manage Tournament</TableCell>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -198,7 +267,17 @@ const TournamentsPage: React.FC = () => {
                       <TableCell>{tournament.startDate}</TableCell>
                       <TableCell>{tournament.endDate}</TableCell>
                       <TableCell>{tournament.nMaxParticipants}</TableCell>
-                      <TableCell>{tournament.tournamentCode}</TableCell>
+                      <TableCell>                      
+                        <Button 
+                          className="bg-indigo-600 text-white text-xs px-4 py-2 rounded-lg hover:bg-indigo-700"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent triggering row click
+                            handleOpenTournamentDetails(tournament.tournamentCode);
+                          }}
+                        >
+                          View & Start
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (
@@ -240,28 +319,11 @@ const TournamentsPage: React.FC = () => {
   
             <div>
               <label htmlFor="status" className="block text-sm font-medium text-gray-700">
-                Tournament status:
+                Tournament Status:
               </label>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button className="w-full text-left bg-white text-gray-400 border border-gray-300 hover:bg-gray-100 rounded-lg focus:ring-indigo-500">
-                    {formData.status || "Select status"}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  {["Soon", "In Progress", "Finished"].map((status) => (
-                    <DropdownMenuItem
-                      key={status}
-                      onSelect={() => handleStatusChange(status)}
-                      className="hover:bg-indigo-100 rounded-md"
-                    >
-                      {status}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+              <p className="text-gray-500">Soon</p>
             </div>
+
   
             <div>
               <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
@@ -273,10 +335,13 @@ const TournamentsPage: React.FC = () => {
                 name="startDate"
                 value={formData.startDate}
                 onChange={handleChange}
+                min={new Date().toISOString().split("T")[0]} // Fecha mínima hoy
                 className="rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 w-full"
                 required
               />
             </div>
+
+
   
             <div>
               <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">
@@ -288,9 +353,11 @@ const TournamentsPage: React.FC = () => {
                 name="endDate"
                 value={formData.endDate}
                 onChange={handleChange}
+                min={formData.startDate || new Date().toISOString().split("T")[0]} // Mínimo es hoy o la fecha de inicio
                 className="rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 w-full"
                 required
               />
+
             </div>
   
             <div>
@@ -334,6 +401,9 @@ const TournamentsPage: React.FC = () => {
       </Modal>
     </div>
   );
+  
 }  
+
+
 
 export default TournamentsPage;
