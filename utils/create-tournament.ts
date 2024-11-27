@@ -3,7 +3,7 @@ import { insertGroup, insertRound, insertMatch, getGroupsByTournamentId, getRoun
 export const createTournamentBracket = async (tournamentData: {
   tournamentId: number;
   tournamentName: string;
-  participants: Array<{ id: number; name: string } | null>;
+  participants: Array<{ id: number; name: string } | null> ;
 }) => {
   const EMPTY_SPOT = "EMPTY_SPOT"; // Placeholder for matches with unresolved participants
   const participants = tournamentData.participants;
@@ -18,7 +18,7 @@ export const createTournamentBracket = async (tournamentData: {
   const byesNeeded = nextPowerOfTwo - totalParticipants;
 
   // Add BYEs to participants
-  const activeParticipants: Array<{ id: number; name: string } | null> = [...participants];
+  const activeParticipants = [...participants];
   for (let i = 0; i < byesNeeded; i++) {
     activeParticipants.push(null); // Represent BYEs as `null`
   }
@@ -101,8 +101,8 @@ export const createTournamentBracket = async (tournamentData: {
       // Insert the match
       await insertMatch(
         roundId,
-        participant1 ? String(participant1.id ?? EMPTY_SPOT) : EMPTY_SPOT,
-        participant2 ? String(participant2.id ?? EMPTY_SPOT) : EMPTY_SPOT,
+        participant1 ? String(participant1.id) ?? EMPTY_SPOT : null,
+        participant2 ? String(participant2.id) ?? EMPTY_SPOT : null,
         matchNumber++
       );
 
