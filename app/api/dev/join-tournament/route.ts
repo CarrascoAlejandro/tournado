@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, participants, getTournamentByCode } from "@/lib/db"; // Importa la conexión y la tabla desde db.ts
+import { db, participants, getTournamentByCode, getParticipantCountByTournamentId } from "@/lib/db"; // Importamos el nuevo método
 import { eq } from "drizzle-orm";
 
 export async function POST(req: NextRequest) {
@@ -31,8 +31,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Obtenemos la cantidad actual de participantes
+    const currentParticipantCount = await getParticipantCountByTournamentId(tournamentIdFromCode);
+
+    // Verificamos si el límite se ha alcanzado
+    if (currentParticipantCount >= tournamentFromCode.nMaxParticipants) {
+      return NextResponse.json(
+        { error: "El torneo ha alcanzado el número máximo de participantes." },
+        { status: 403 }
+      );
+    }
+
+    // Insertamos el nuevo participante
     const result = await db.insert(participants).values({
-      tournamentId: tournamentIdFromCode, 
+      tournamentId: tournamentIdFromCode,
       participantName,
     });
 

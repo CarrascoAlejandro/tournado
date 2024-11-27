@@ -13,6 +13,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { not, and, or, count, eq, ilike } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
+import { sql } from "drizzle-orm";
 
 export const db = drizzle(neon(process.env.POSTGRES_URL!));
 
@@ -120,6 +121,7 @@ export const participants = pgTable('participant', {
   tournamentId: integer('tournament_id').notNull()
 });
 
+
 export const tournamentGroups = pgTable('tournament_groups', {
   groupId: serial('group_id').primaryKey(),
   tournamentId: integer('tournament_id').notNull(), // Foreign key to tournaments
@@ -190,6 +192,21 @@ export async function getTournament(
     newOffset,
     totalTournaments: totalTournaments[0].count
   };
+}
+
+export async function getParticipantCountByTournamentId(tournamentId: number) {
+  try {
+    // Query para contar los participantes utilizando SQL raw
+    const [{ count }] = await db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(participants)
+      .where(eq(participants.tournamentId, tournamentId));
+
+    return count; // Retornamos el número directamente
+  } catch (error) {
+    console.error('Error fetching participant count:', error);
+    throw error;
+  }
 }
 
 export async function deleteTournamentById(id: number) {
