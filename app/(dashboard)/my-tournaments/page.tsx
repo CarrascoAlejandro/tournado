@@ -18,6 +18,7 @@ import TournamentModal from '@/components/ui/tournament-modal';
 import { Tournament } from '@/components/ui/tournament-modal';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { set } from 'zod';
+import { Loader } from '@/components/ui/loader';
 
 
 const TournamentsPage: React.FC = () => {
@@ -109,7 +110,11 @@ const TournamentsPage: React.FC = () => {
     setSelectedTournament(null);
   };
 
-  if (status === 'loading') return <div>Loading...</div>;
+  if (status === 'loading') return (
+    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }} >
+      {Loader(250, 250)} 
+    </div> // Loading indicator // FIXME: make size depend on screen size;
+  )
 
   const openCreateModal = () => {
     console.log('Opening create modal');
