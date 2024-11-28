@@ -472,3 +472,37 @@ export async function getMatchGamesByMatchId(matchId: number) {
     throw error;
   }
 }
+
+export async function getParticipantsByMatchId(matchId: number) {
+  try {
+    // Obtener el Match con los IDs de los participantes
+    const match = await db
+      .select({
+        participant1Id: matchBracket.participant1Id,
+        participant2Id: matchBracket.participant2Id,
+      })
+      .from(matchBracket)
+      .where(eq(matchBracket.matchId, matchId))
+      .limit(1);
+
+    if (match.length === 0) {
+      throw new Error(`No se encontró el match con ID ${matchId}`);
+    }
+
+    const { participant1Id, participant2Id } = match[0];
+
+    // Consultar los participantes por sus IDs
+    const participantsResult = await db
+      .select()
+      .from(participants)
+      .where(
+        eq(participants.participantId, parseInt(participant1Id ?? '0')) ||
+          eq(participants.participantId, parseInt(participant2Id ?? '0'))
+      );
+
+    return participantsResult;
+  } catch (error) {
+    console.error('Error al obtener participantes por ID de match:', error);
+    throw error;
+  }
+}
