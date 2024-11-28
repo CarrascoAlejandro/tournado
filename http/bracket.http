@@ -23,3 +23,17 @@ Content-Type: application/json
     "participant2Id": 57,
     "level": "semi"
 }
+
+
+####
+PUT http://localhost:3000/api/dev/tournament/match/52
+Accept: application/json
+Content-Type: application/json
+
+{
+    "homeResult": 1,
+    "awayResult": 4
+}
+
+###
+GET http://localhost:3000/api/dev/get-participants/participant/214
