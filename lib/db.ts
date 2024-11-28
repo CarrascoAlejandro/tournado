@@ -522,3 +522,33 @@ export async function getMatchGamesByMatchId(matchId: number) {
   }
 }
 
+const dbFunctions = {
+  insertUser,
+  userExists,
+  getUserByEmail,
+  deactivateUser,
+  getTournamentsByUser,
+  insertTournament,
+  getTournament,
+  updateTournamentStatus,
+  getParticipantsByTournamentId,
+  getAllParticipantsByTournamentId,
+  getParticipantById,
+  getTournamentIdByCode,
+  getTournamentNameByCode,
+  insertGroup,
+  getGroupsByTournamentId,
+  insertRound,
+  getRoundsByGroupId,
+  insertMatch,
+  getMatchesByRoundId,
+  getMatchByRoundIdAndMatchNumber,
+  updateMatchResults,
+  updateNextMatch,
+  insertMatchGame,
+  getMatchGamesByMatchId,
+  deleteTournamentById,
+  getParticipantCountByTournamentId
+};
+
+export default dbFunctions;

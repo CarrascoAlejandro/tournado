@@ -51,13 +51,20 @@ useEffect(() => {
   const fetchData = async () => {
     if (ready) {
       try {
-        const updatedMatch = await updateParticipantMatch({
-          tournamentId: Number(tournamentId) ?? 0,
-          roundId: roundId ?? 0,
-          previousMatchId: matchId ?? 0,
-          participantId: opponentPassedId ?? 0,
+        console.log("llega a patch en use effect", tournamentId)
+        const response = await fetch(`/api/dev/tournament/match`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            tournamentId: Number(tournamentId) ?? 0,
+            roundId: roundId ?? 0,
+            previousMatchId: matchId ?? 0,
+            participantId: opponentPassedId ?? 0,
+          }),
         });
-        console.log("updatedMatch", updatedMatch);
+        console.log("llega a patch en use effect", response);
       } catch (error) {
         console.error("Error updating match:", error);
       }
