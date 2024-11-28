@@ -1,40 +1,32 @@
 "use client";
 
-import { Console } from "console";
 import React, { useEffect, useState, useRef } from "react";
-// import styles from "@/app/BracketPage.module.css";
 
 const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
   const { tournamentCode } = params;
   // const [selectedMatch, setSelectedMatch] = useState(null);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [showInputMask, setShowInputMask] = useState(false);
-  // const opponent1Ref = useRef(null);
-  // const opponent2Ref = useRef(null);
   const opponent1Ref = useRef<HTMLInputElement>(null);
   const opponent2Ref = useRef<HTMLInputElement>(null);
-  // const [scoreData, setScoreData] = useState({
-  //   homeResult:'',
-  //   awayResult: ''
-  // });
-  /*{
 
-    homeResult: score1,
-    awayResult: score2
-    
-  } */
 
 interface Participant {
   id: number;
-  name: string;
+  participantName: string;
 }
-
 interface Match {
   id: string;
-  participant1: string | null;
-  participant2: string | null;
+  opponent1: {
+    id: number;
+  } | null;
+  opponent2: {
+    id: number;
+  } | null;
+  opponent1Name?: string; // Opcional, porque puede no estar disponible al inicio
+  opponent2Name?: string; // Opcional, porque puede no estar disponible al inicio
 }
-  
+
 
   const fetchAndRenderBrackets = async () => {
     try {
@@ -60,10 +52,19 @@ interface Match {
           setSelectedMatch(match);
           console.log("match", match)
           try {
-            const id = Number(match.id);
-            console.log("matchID", match.id)
-            // const participants = await getParticipantsByMatchId(id);
-            // console.log('Participantes:', participants);
+            await getParticipant(match);
+            // console.log("o1", match.opponent1?.id)
+            // console.log("o1", match.opponent2?.id)
+            // const participant1 = await getParticipantsByMatchId(Number(match.opponent1?.id));
+            // console.log('Participantes:', participant1);
+            // const participant2 = await getParticipantsByMatchId(Number(match.opponent2?.id));
+            // console.log('Participantes:', participant2);
+
+            // setSelectedMatch({
+            //   ...match,
+            //   opponent1Name: participant1?.participantName || "Sin Nombre",
+            //   opponent2Name: participant2?.participantName || "Sin Nombre",
+            // });
           } catch (error) {
             console.error(error);
           }
@@ -79,6 +80,21 @@ interface Match {
     }
   };
 
+  const getParticipant = async (match:Match) =>{
+    console.log("o1", match.opponent1?.id)
+    console.log("o1", match.opponent2?.id)
+    //FIXME
+    const participant1 = await getParticipantsByMatchId(Number(match.opponent1?.id));
+    console.log('Participantes:', participant1);
+    const participant2 = await getParticipantsByMatchId(Number(match.opponent2?.id));
+    console.log('Participantes:', participant2);
+
+    setSelectedMatch({
+              ...match,
+              opponent1Name: participant1?.participantName || "Sin Nombre",
+              opponent2Name: participant2?.participantName || "Sin Nombre",
+            });
+  }
   const updateMatch = async () => {
     if (!selectedMatch || !opponent1Ref.current || !opponent2Ref.current) return;
 
@@ -116,7 +132,7 @@ interface Match {
   const getParticipantsByMatchId = async (matchID:number) => {
     try {
       // Fetch the tournament data
-      const res = await fetch(`/api/dev/get-paticipants/${matchID}`);
+      const res = await fetch(`/api/dev/get-participants/participant/${matchID}`);
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.error || "Error fetching tournament data.");
@@ -124,6 +140,7 @@ interface Match {
 
       const data = await res.json();
       console.log("Fetched participant data:", data);
+      return data;
     } catch (error) {
       console.error("Error fetching participants:", error);
     }
@@ -169,7 +186,7 @@ interface Match {
       textAlign: "center" as const,
     },
     scoreInput: {
-      fontSize: "2rem",
+      fontSize: "1.5rem",
       width: "60px",
       textAlign: "center" as const,
       border: "2px solid #000",
@@ -204,7 +221,7 @@ interface Match {
       fontSize: "1rem",
       border: "none",
       borderRadius: "8px",
-      backgroundColor: "#007bff",
+      backgroundColor: "#4F46E5",
       color: "#fff",
       cursor: "pointer",
     },
@@ -222,7 +239,7 @@ interface Match {
             aria-labelledby="input-mask-title"
           >
             <h2 id="input-mask-title" style={styles.title}>
-              Registrar Resultado
+              Record result
             </h2>
             <div style={styles.scoreSection}>
               <div style={styles.team}>
@@ -235,7 +252,7 @@ interface Match {
                   max="99"
                   aria-label="Puntaje del equipo 1"
                 />
-                {/* <p style={styles.teamName}>{selectedMatch.opponent1Name}</p> */}
+                <p style={styles.teamName}>{selectedMatch.opponent1Name}</p>
               </div>
               <div style={styles.separator}>:</div>
               <div style={styles.team}>
@@ -248,7 +265,7 @@ interface Match {
                   max="99"
                   aria-label="Puntaje del equipo 2"
                 />
-                {/* <p style={styles.teamName}>{selectedMatch.opponent2Name}</p> */}
+                <p style={styles.teamName}>{selectedMatch.opponent2Name}</p>
               </div>
             </div>
             <div style={styles.actions}>
@@ -256,10 +273,10 @@ interface Match {
                 onClick={() => setShowInputMask(false)}
                 style={styles.cancelButton}
               >
-                Cancelar
+                Cancel
               </button>
               <button onClick={() => updateMatch()} style={styles.confirmButton}>
-                Confirmar
+                Confirm
               </button>
             </div>
           </div>
