@@ -122,7 +122,7 @@ export const participants = pgTable('participant', {
 });
 
 
-export const tournamentGroups = pgTable('tournament_groups', {
+export const tournamentGroups = pgTable('tournament_groups', {//por eliminación simple solo tenemos 1 grupo por torneo
   groupId: serial('group_id').primaryKey(),
   tournamentId: integer('tournament_id').notNull(), // Foreign key to tournaments
   groupNumber: integer('group_number').notNull(), // Logical grouping within the tournament
@@ -290,7 +290,7 @@ export async function updateTournamentStatus(tournamentId: number, status: "Soon
 export async function getParticipantsByTournamentId(tournamentId: number) {
   try {
     const participants_ids = await db
-      .select({ participantId: participants.participantId })
+      .select()
       .from(participants)
       .where(eq(participants.tournamentId, tournamentId));
 
@@ -367,7 +367,6 @@ export async function getTournamentNameByCode(tournamentCode: string) {
   }
 }
 
-
 // Insert a group
 export async function insertGroup(tournamentId: number, groupNumber: number) {
   try {
@@ -421,7 +420,7 @@ export async function getRoundsByGroupId(groupId: number) {
 }
 
 // Insert a match
-export async function insertMatch(roundId: number, participant1Id: string, participant2Id: string, matchNumber: number) {
+export async function insertMatch(roundId: number, participant1Id: string | null, participant2Id: string | null, matchNumber: number) {
   try {
     await db.insert(matchBracket).values({ roundId, participant1Id, participant2Id, status: "pending", matchNumber, homeResult: 0, awayResult: 0 });
     console.log(`Match ${matchNumber} for round ${roundId} inserted successfully`);
@@ -446,6 +445,58 @@ export async function getMatchesByRoundId(roundId: number) {
   }
 }
 
+export async function getMatchByRoundIdAndMatchNumber(roundId: number, matchNumber: number) {
+  try {
+    const matchResult = await db
+      .select()
+      .from(matchBracket)
+      .where(and(eq(matchBracket.roundId, roundId), eq(matchBracket.matchNumber, matchNumber)));
+
+    return matchResult;
+  } catch (error) {
+    console.error("Error fetching matches by round ID and match number:", error);
+    throw error;
+  }
+}
+
+// Update match results (home_result, away_result) for a specific match_id
+export async function updateMatchResults(matchId: number, homeResult: number, awayResult: number) {
+  try {
+    const updatedMatch = await db
+      .update(matchBracket)
+      .set({
+        homeResult: homeResult,  // Update the home_result column
+        awayResult: awayResult,  // Update the away_result column
+      })
+      .where(eq(matchBracket.matchId, matchId));  // Specify the match_id to find the match
+
+    return updatedMatch;
+  } catch (error) {
+    console.error("Error updating match results:", error);
+    throw error;
+  }
+}
+
+
+
+export async function updateNextMatch(matchId: number, participant1Id: string| null, participant2Id: string| null) {
+  try {
+    const updatedMatch = await db
+      .update(matchBracket)
+      .set({
+        participant1Id: participant1Id,  
+        participant2Id: participant2Id,  
+      })
+      .where(eq(matchBracket.matchId, matchId)); 
+
+    return updatedMatch;
+  } catch (error) {
+    console.error("Error updating match results:", error);
+    throw error;
+  }
+}
+
+
 
 // Insert a match game
 export async function insertMatchGame(matchId: number, participant1Score: number, participant2Score: number, gameStatus: string) {
@@ -467,8 +518,40 @@ export async function getMatchGamesByMatchId(matchId: number) {
       .where(eq(matchGames.matchId, matchId));
 
     return matchGamesResult;
+
   } catch (error) {
     console.error("Error fetching match games by match ID:", error);
     throw error;
   }
 }
+
+const dbFunctions = {
+  insertUser,
+  userExists,
+  getUserByEmail,
+  deactivateUser,
+  getTournamentsByUser,
+  insertTournament,
+  getTournament,
+  updateTournamentStatus,
+  getParticipantsByTournamentId,
+  getAllParticipantsByTournamentId,
+  getParticipantById,
+  getTournamentIdByCode,
+  getTournamentNameByCode,
+  insertGroup,
+  getGroupsByTournamentId,
+  insertRound,
+  getRoundsByGroupId,
+  insertMatch,
+  getMatchesByRoundId,
+  getMatchByRoundIdAndMatchNumber,
+  updateMatchResults,
+  updateNextMatch,
+  insertMatchGame,
+  getMatchGamesByMatchId,
+  deleteTournamentById,
+  getParticipantCountByTournamentId
+};
+
+export default dbFunctions;

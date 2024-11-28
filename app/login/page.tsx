@@ -6,21 +6,27 @@ import {
   CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle,
+  CardTitle
 } from '@/components/ui/card';
 import { signIn } from 'next-auth/react';
 import { FaGoogle, FaGithub, FaDiscord } from 'react-icons/fa';
 
 export default function LoginPage() {
+  // Función para redirigir al home
+  const redirectToHome = () => {
+    window.location.href = '/';
+  };
+
   return (
     <div
       className="min-h-screen flex justify-center items-center bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500 p-8"
       style={{
         backgroundImage: 'url(/static/background1.png)',
         backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        backgroundPosition: 'center'
       }}
     >
+      <div id="google_translate_element"></div>
       <Card className="w-full max-w-md bg-white/80 backdrop-blur-lg shadow-2xl rounded-lg overflow-hidden">
         <div className="flex justify-center p-6">
           <img
@@ -66,6 +72,15 @@ export default function LoginPage() {
           >
             <FaDiscord className="text-2xl" />
             Sign in with Discord
+          </Button>
+
+          {/* Button to go back to home */}
+          <Button
+            onClick={redirectToHome}
+            className="w-full mt-4 text-gray-700 hover:text-white bg-transparent border border-gray-300 hover:bg-gray-800 transition-all duration-300 rounded-lg py-2"
+            size="lg"
+          >
+            <span className="text-lg">Go Home</span>
           </Button>
 
           <p className="text-center text-gray-500 text-xs mt-4">

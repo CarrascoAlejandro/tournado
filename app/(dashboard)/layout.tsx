@@ -32,12 +32,25 @@ export default function DashboardLayout({
               {children}
             </main>
           </div>
+
+          {/* Script para detectar el parámetro de recarga y hacer un reload */}
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                if (window.location.search.includes('reload=true')) {
+                  window.location.reload();
+                }
+              `,
+            }}
+          />
+
           <Analytics />
         </main>
       </SessionProvider> 
     </Providers>
   );
 }
+
 function DesktopNav() {
   return (
     <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
@@ -46,8 +59,6 @@ function DesktopNav() {
         <br />
         <br />
         <br />
-
-
 
         <NavItem href="/" label="Home">
           <Home className="h-5 w-5" />

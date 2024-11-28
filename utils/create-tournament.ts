@@ -3,7 +3,7 @@ import { insertGroup, insertRound, insertMatch, getGroupsByTournamentId, getRoun
 export const createTournamentBracket = async (tournamentData: {
   tournamentId: number;
   tournamentName: string;
-  participants: Array<{ id: number; name: string } | null>;
+  participants: Array<{ id: number; name: string } | null> ;
 }) => {
   const EMPTY_SPOT = "EMPTY_SPOT"; // Placeholder for matches with unresolved participants
   const participants = tournamentData.participants;
@@ -18,25 +18,48 @@ export const createTournamentBracket = async (tournamentData: {
   const byesNeeded = nextPowerOfTwo - totalParticipants;
 
   // Add BYEs to participants
-  const activeParticipants: Array<{ id: number; name: string } | null> = [...participants];
+  const activeParticipants = [...participants];
   for (let i = 0; i < byesNeeded; i++) {
     activeParticipants.push(null); // Represent BYEs as `null`
   }
 
   // Ensure no excessive consecutive BYEs
   const hasExcessiveConsecutiveByes = (participants: Array<any>, maxByes = 2) => {
-    let byeCount = 0;
-    for (const participant of participants) {
-      if (participant === null) byeCount++;
-      else byeCount = 0; // Reset on non-BYE
-      if (byeCount > maxByes) return true;
+    for (let i = 0; i < participants.length; i++) {
+      if (participants[i] !== null) {
+        let byeCount = 0;
+        // Verificar hacia adelante
+        for (let j = i + 1; j < participants.length && participants[j] === null; j++) {
+          byeCount++;
+        }
+        // Verificar hacia atrás
+        for (let j = i - 1; j >= 0 && participants[j] === null; j--) {
+          byeCount++;
+        }
+        if (byeCount > maxByes) return true;
+      }
     }
     return false;
   };
 
-  do {
-    activeParticipants.sort(() => Math.random() - 0.5); // Shuffle participants
-  } while (hasExcessiveConsecutiveByes(activeParticipants));
+  const shuffleArray = (array: Array<any>) => {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  };
+
+  const ensureNoExcessiveConsecutiveByes = (participants: Array<any>, maxByes = 2) => {
+    let shuffledParticipants = [...participants];
+    while (hasExcessiveConsecutiveByes(shuffledParticipants, maxByes)) {
+      shuffledParticipants = shuffleArray(shuffledParticipants);
+    }
+    return shuffledParticipants;
+  };
+
+  // Shuffle participants to ensure no excessive consecutive BYEs
+  const shuffledParticipants = ensureNoExcessiveConsecutiveByes(activeParticipants);
 
   // Insert the group
   await insertGroup(tournamentData.tournamentId, 1); // Single group (number 1)
@@ -62,7 +85,7 @@ export const createTournamentBracket = async (tournamentData: {
 
   // Create matches for all rounds
   let matchNumber = 1;
-  let previousRoundWinners = activeParticipants; // Start with all participants
+  let previousRoundWinners = shuffledParticipants; // Start with all participants
 
   for (let roundIndex = 0; roundIndex < totalRounds; roundIndex++) {
     const roundId = rounds[roundIndex].roundId;
@@ -101,8 +124,8 @@ export const createTournamentBracket = async (tournamentData: {
       // Insert the match
       await insertMatch(
         roundId,
-        participant1 ? String(participant1.id ?? EMPTY_SPOT) : EMPTY_SPOT,
-        participant2 ? String(participant2.id ?? EMPTY_SPOT) : EMPTY_SPOT,
+        participant1 ? String(participant1.id) ?? EMPTY_SPOT : null,
+        participant2 ? String(participant2.id) ?? EMPTY_SPOT : null,
         matchNumber++
       );
 
