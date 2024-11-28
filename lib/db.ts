@@ -122,7 +122,7 @@ export const participants = pgTable('participant', {
 });
 
 
-export const tournamentGroups = pgTable('tournament_groups', {
+export const tournamentGroups = pgTable('tournament_groups', {//por eliminación simple solo tenemos 1 grupo por torneo
   groupId: serial('group_id').primaryKey(),
   tournamentId: integer('tournament_id').notNull(), // Foreign key to tournaments
   groupNumber: integer('group_number').notNull(), // Logical grouping within the tournament
@@ -446,6 +446,23 @@ export async function getMatchesByRoundId(roundId: number) {
   }
 }
 
+// Update match results (home_result, away_result) for a specific match_id
+export async function updateMatchResults(matchId: number, homeResult: number, awayResult: number) {
+  try {
+    const updatedMatch = await db
+      .update(matchBracket)
+      .set({
+        homeResult: homeResult,  // Update the home_result column
+        awayResult: awayResult,  // Update the away_result column
+      })
+      .where(eq(matchBracket.matchId, matchId));  // Specify the match_id to find the match
+
+    return updatedMatch;
+  } catch (error) {
+    console.error("Error updating match results:", error);
+    throw error;
+  }
+}
 
 // Insert a match game
 export async function insertMatchGame(matchId: number, participant1Score: number, participant2Score: number, gameStatus: string) {
@@ -467,6 +484,7 @@ export async function getMatchGamesByMatchId(matchId: number) {
       .where(eq(matchGames.matchId, matchId));
 
     return matchGamesResult;
+
   } catch (error) {
     console.error("Error fetching match games by match ID:", error);
     throw error;
