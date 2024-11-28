@@ -444,16 +444,17 @@ export async function getMatchesByRoundId(roundId: number) {
     throw error;
   }
 }
+
 export async function getMatchByRoundIdAndMatchNumber(roundId: number, matchNumber: number) {
   try {
     const matchResult = await db
       .select()
       .from(matchBracket)
-      .where(eq(matchBracket.roundId, roundId) && eq(matchBracket.matchNumber, matchNumber));
+      .where(and(eq(matchBracket.roundId, roundId), eq(matchBracket.matchNumber, matchNumber)));
 
     return matchResult;
   } catch (error) {
-    console.error("Error fetching matches by round ID:", error);
+    console.error("Error fetching matches by round ID and match number:", error);
     throw error;
   }
 }
@@ -475,6 +476,8 @@ export async function updateMatchResults(matchId: number, homeResult: number, aw
     throw error;
   }
 }
+
+
 
 export async function updateNextMatch(matchId: number, participant1Id: string| null, participant2Id: string| null) {
   try {

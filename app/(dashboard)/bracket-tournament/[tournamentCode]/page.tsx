@@ -1,13 +1,9 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import {updateParticipantMatch} from "utils/update-participant-match";
-import { set } from "zod";
-
 
 const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
   const { tournamentCode } = params;
-  // const [selectedMatch, setSelectedMatch] = useState(null);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [showInputMask, setShowInputMask] = useState(false);
   const opponent1Ref = useRef<HTMLInputElement>(null);
@@ -16,67 +12,26 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
   const [opponentPassedId, setOpponentPassedId] = useState<number | null>(null);
   const [roundId, setRoundId] = useState<number | null>(null);
   const [matchId, setMatchId] = useState<number | null>(null);
-  const [ready, setReady] = useState(false);
 
-
-interface Participant {
-  id: number;
-  participantName: string;
-}
-interface Match {
-  id: string;
-  opponent1: {
+  interface Participant {
     id: number;
-  } | null;
-  opponent2: {
-    id: number;
-  } | null;
-  opponent1Name?: string; // Opcional, porque puede no estar disponible al inicio
-  opponent2Name?: string; // Opcional, porque puede no estar disponible al inicio
-  round_id?: number;
-}
-
-// Si quieres ver cuando se actualiza roundId
-useEffect(() => {
-  console.log("match guardado con round id", roundId);
-  console.log("match guardado con match id", matchId);
-  setReady(false);
-}, [roundId, matchId]); // Esto se ejecutará cada vez que roundId cambie
-useEffect(() => {
-  console.log("match guardado con opponentPassedId", opponentPassedId);
-  setReady(true);
-}, [ opponentPassedId]); // Esto se ejecutará cada vez que roundId cambie
-
-useEffect(() => {
-  const fetchData = async () => {
-    if (ready) {
-      try {
-        console.log("llega a patch en use effect", tournamentId)
-        const response = await fetch(`/api/dev/tournament/match`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            tournamentId: Number(tournamentId) ?? 0,
-            roundId: roundId ?? 0,
-            previousMatchId: matchId ?? 0,
-            participantId: opponentPassedId ?? 0,
-          }),
-        });
-        console.log("llega a patch en use effect", response);
-      } catch (error) {
-        console.error("Error updating match:", error);
-      }
-    }
-  };
-
-  fetchData(); // Llama a la función async
-}, [ready]); // Esto se ejecutará cada vez que 'ready' cambie
+    participantName: string;
+  }
+  interface Match {
+    id: string;
+    opponent1: {
+      id: number;
+    } | null;
+    opponent2: {
+      id: number;
+    } | null;
+    opponent1Name?: string;
+    opponent2Name?: string;
+    round_id?: number;
+  }
 
   const fetchAndRenderBrackets = async () => {
     try {
-      // Fetch the tournament data
       const res = await fetch(`/api/dev/tournament/${tournamentCode}/brackets`);
       if (!res.ok) {
         const errorData = await res.json();
@@ -85,11 +40,8 @@ useEffect(() => {
 
       const tournamentData = await res.json();
       console.log("Fetched tournament data:", tournamentData);
-      //aqui TT no te pierdas
-      console.log("tournamentData.stage[0].tournamentId", tournamentData.stage[0].id)
-      setTournamentId(Number(tournamentData.stage[0].id)); 
+      setTournamentId(Number(tournamentData.stage[0].id));
 
-      // Render the brackets using the fetched data
       if (window.bracketsViewer) {
         window.bracketsViewer.render({
           stages: tournamentData.stage,
@@ -98,34 +50,18 @@ useEffect(() => {
           participants: tournamentData.participant,
         });
         window.bracketsViewer.onMatchClicked = async (match: any) => {
-          
-          console.log("match", match)
-
-          console.log("match con round id" , Number(match.round_id));
+          console.log("match", match);
+          console.log("match con round id", Number(match.round_id));
           setRoundId(Number(match.round_id));
           setMatchId(Number(match.id));
-          // console.log("match con su id" , selectedMatch?.id);
           try {
             setSelectedMatch(match);
             await getParticipant(match);
-
-            // console.log("o1", match.opponent1?.id)
-            // console.log("o1", match.opponent2?.id)
-            // const participant1 = await getParticipantsByMatchId(Number(match.opponent1?.id));
-            // console.log('Participantes:', participant1);
-            // const participant2 = await getParticipantsByMatchId(Number(match.opponent2?.id));
-            // console.log('Participantes:', participant2);
-
-            // setSelectedMatch({
-            //   ...match,
-            //   opponent1Name: participant1?.participantName || "Sin Nombre",
-            //   opponent2Name: participant2?.participantName || "Sin Nombre",
-            // });
           } catch (error) {
             console.error(error);
           }
-          console.log("o1", match.opponent1?.id)
-          console.log("o1", match.opponent2?.id)
+          console.log("o1", match.opponent1?.id);
+          console.log("o1", match.opponent2?.id);
           setShowInputMask(true);
         };
       } else {
@@ -136,23 +72,22 @@ useEffect(() => {
     }
   };
 
-  const getParticipant = async (match:Match) =>{
-    console.log("o1", match.opponent1?.id)
-    console.log("o1", match.opponent2?.id)
-    //FIXME
+  const getParticipant = async (match: Match) => {
+    console.log("o1", match.opponent1?.id);
+    console.log("o1", match.opponent2?.id);
     const participant1 = await getParticipantsByMatchId(Number(match.opponent1?.id));
     console.log('Participantes:', participant1);
     const participant2 = await getParticipantsByMatchId(Number(match.opponent2?.id));
     console.log('Participantes:', participant2);
 
     setSelectedMatch({
-              ...match,
-              opponent1Name: participant1?.participantName || "Sin Nombre",
-              opponent2Name: participant2?.participantName || "Sin Nombre",
-              round_id: match.round_id??0,
-            });
-    // console.log("selectedMatch round id:", selectedMatch?.round_id?.toString())
-  }
+      ...match,
+      opponent1Name: participant1?.participantName || "Sin Nombre",
+      opponent2Name: participant2?.participantName || "Sin Nombre",
+      round_id: match.round_id ?? 0,
+    });
+  };
+
   const updateMatch = async () => {
     if (!selectedMatch || !opponent1Ref.current || !opponent2Ref.current) return;
 
@@ -160,14 +95,14 @@ useEffect(() => {
     const score2 = Number(opponent2Ref.current.value);
 
     try {
-      console.log("score1",score1)
-      console.log("score2",score2)
+      console.log("score1", score1);
+      console.log("score2", score2);
       const scoreData = {
         homeResult: score1,
         awayResult: score2
       };
-    
-      console.log("scoreData", scoreData); // Verificar los datos antes de enviar
+
+      console.log("scoreData", scoreData);
 
       await fetch(`/api/dev/tournament/match/${selectedMatch.id}`, {
         method: 'PUT',
@@ -176,40 +111,58 @@ useEffect(() => {
         },
         body: JSON.stringify(scoreData),
       });
-      // console.log("body", body)
+
       setShowInputMask(false);
-      let participantId=0;
-      if(selectedMatch.opponent1?.id && selectedMatch.opponent2?.id){
-        if(score1 > score2){
+      let participantId = 0;
+      if (selectedMatch.opponent1?.id && selectedMatch.opponent2?.id) {
+        if (score1 > score2) {
           participantId = selectedMatch.opponent1?.id;
           setOpponentPassedId(selectedMatch.opponent1?.id);
-          }else{
-            participantId = selectedMatch.opponent2?.id;
-            setOpponentPassedId(selectedMatch.opponent2?.id);
-          }
-          console.log("participantId", participantId)
-          // if(ready){
-          //   const updatedMatch = await updateParticipantMatch({
-          //     tournamentId: tournamentId ?? 0,
-          //     roundId: roundId ?? 0,
-          //     previousMatchId: matchId ?? 0,
-          //     participantId: opponentPassedId ?? 0,
-          //   });
-          //   console.log("updatedMatch", updatedMatch);
-          // }
+        } else {
+          participantId = selectedMatch.opponent2?.id;
+          setOpponentPassedId(selectedMatch.opponent2?.id);
+        }
+        console.log("participantId", participantId);
+
+        // Trigger the PATCH request after updating the match
+        await fetch(`/api/dev/tournament/match`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            tournamentId: Number(tournamentId) ?? 0,
+            roundId: roundId ?? 0,
+            previousMatchId: matchId ?? 0,
+            participantId: participantId ?? 0,
+          }),
+        })
+        .then(response => {
+            if (!response.ok) {
+              return response.json().then(errorData => {
+                console.error("Error en la solicitud PATCH:", errorData);
+                throw new Error(errorData.error || "Error en la solicitud PATCH");
+              });
+            }
+            return response.json();
+          })
+          .then(data => {
+            console.log("Respuesta de la solicitud PATCH:", data);
+          })
+          .catch(error => {
+            console.error("Error al realizar la solicitud PATCH:", error);
+        });
+
+        // Refetch and render brackets after updating the match
+        fetchAndRenderBrackets();
       }
-      // fetchAndRenderBrackets();
-      //FIXME
-      // Forzar recarga completa de la página
-      // window.location.reload();
     } catch (error) {
       console.error("Failed to update match:", error);
     }
   };
 
-  const getParticipantsByMatchId = async (matchID:number) => {
+  const getParticipantsByMatchId = async (matchID: number) => {
     try {
-      // Fetch the tournament data
       const res = await fetch(`/api/dev/get-participants/participant/${matchID}`);
       if (!res.ok) {
         const errorData = await res.json();
@@ -222,7 +175,8 @@ useEffect(() => {
     } catch (error) {
       console.error("Error fetching participants:", error);
     }
-  }
+  };
+
   useEffect(() => {
     fetchAndRenderBrackets();
   }, [tournamentCode]);
@@ -304,7 +258,7 @@ useEffect(() => {
       cursor: "pointer",
     },
   };
-  // return <div className="brackets-viewer" />;
+
   return (
     <div>
       <div className="brackets-viewer" />
@@ -362,7 +316,6 @@ useEffect(() => {
       )}
     </div>
   );
-  
 };
 
 export default BracketPage;
