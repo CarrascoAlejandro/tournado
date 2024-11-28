@@ -290,7 +290,7 @@ export async function updateTournamentStatus(tournamentId: number, status: "Soon
 export async function getParticipantsByTournamentId(tournamentId: number) {
   try {
     const participants_ids = await db
-      .select({ participantId: participants.participantId })
+      .select()
       .from(participants)
       .where(eq(participants.tournamentId, tournamentId));
 
