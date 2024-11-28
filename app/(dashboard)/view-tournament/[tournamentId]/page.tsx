@@ -97,23 +97,35 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
           {message && <p className="text-yellow-500">{message}</p>}
           {error && <p className="text-red-500">{error}</p>}
           {participants.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-4xl">
-              {participants.map((participant) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl">
+              {participants.map((participant, index) => (
                 <div
                   key={participant.participantId}
-                  className="bg-white rounded-lg shadow-lg p-4 flex flex-col items-center"
+                  className="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center border-2 border-gray-200 hover:shadow-xl transition-shadow"
                 >
                   <div
-                    className="h-24 w-24 rounded-full bg-purple-200 flex items-center justify-center text-2xl font-bold text-purple-700"
+                    className="h-24 w-24 rounded-full flex items-center justify-center text-4xl font-light"
                     style={{
-                      backgroundColor: getRandomColor(),
+                      backgroundColor: getColorByIndex(index),
+                      color: "white",
+                      boxShadow: "0 6px 15px rgba(0, 0, 0, 0.3)",
+                      border: "2px solid black", // Contorno más delgado
                     }}
                   >
-                    {participant.participantName.charAt(0).toUpperCase()}
+                    <span
+                      style={{
+                        textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)",
+                      }}
+                    >
+                      {participant.participantName.charAt(0).toUpperCase()}
+                    </span>
                   </div>
-                  <h2 className="text-lg font-semibold mt-4 text-gray-700">
+                  <h2 className="text-xl font-semibold mt-4 text-gray-800">
                     {participant.participantName}
                   </h2>
+                  <p className="text-gray-500 text-sm mt-2">
+                    Participant ID: {participant.participantId}
+                  </p>
                 </div>
               ))}
             </div>
@@ -126,10 +138,15 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
   );
 };
 
-// Function to generate random colors for the cards
-const getRandomColor = () => {
-  const colors = ["#FCE38A", "#F38181", "#95E1D3", "#EAFFD0", "#B5EAEA"];
-  return colors[Math.floor(Math.random() * colors.length)];
+// Function to get a color based on the participant index
+const getColorByIndex = (index: number): string => {
+  const vibrantColors = [
+    "#FF5733", "#FF8D1A", "#FFC300", "#DAF7A6",
+    "#33FF57", "#1AFF8D", "#33C3FF", "#3380FF",
+    "#8D33FF", "#C300FF", "#FF33C3", "#FF3380",
+    "#FF6F33", "#FFAD33", "#DFFF33", "#33FFAD",
+  ];
+  return vibrantColors[index % vibrantColors.length];
 };
 
 export default ViewTournament;

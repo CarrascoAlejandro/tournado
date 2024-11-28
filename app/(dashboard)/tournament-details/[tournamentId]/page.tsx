@@ -9,11 +9,10 @@ interface Participant {
 }
 
 const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
-
   const { tournamentId } = params;
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false); // Cambiar a false inicialmente
+  const [loading, setLoading] = useState<boolean>(false);
 
   const fetchParticipants = async () => {
     try {
@@ -34,45 +33,31 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
   };
 
   const handleMatchGames = async () => {
-    setLoading(true); // Activar el loading al principio de la acción
-
+    setLoading(true);
     try {
-      // POST to start the tournament
       const startRes = await fetch(`/api/dev/tournament/${tournamentId}/start`, {
         method: "POST",
       });
-  
       const startData = await startRes.json();
-  
-      if (startRes.ok) {
-        console.log("Tournament started successfully.");
-      } else if (startData.error === "Tournament has already started") {
-        console.log("Tournament has already started. Proceeding to fetch existing brackets.");
-      } else {
-        // Handle error from POST
+
+      if (!startRes.ok) {
         setError(startData.error || "Error starting the tournament.");
         return;
       }
-  
-      // GET the latest brackets and byes
+
       const fetchRes = await fetch(`/api/dev/tournament/${tournamentId}/brackets`);
       const fetchData = await fetchRes.json();
-  
+
       if (fetchRes.ok) {
-        // Save brackets and byes to localStorage
         localStorage.setItem("matchBrackets", JSON.stringify(fetchData));
-  
-        // Navigate to the bracket page
-        const tournamentUrl = `/bracket-tournament/${tournamentId}`;
-        window.open(tournamentUrl, "_blank");
+        window.open(`/bracket-tournament/${tournamentId}`, "_blank");
       } else {
-        // Handle error from GET
         setError(fetchData.error || "Error fetching tournament brackets.");
       }
     } catch (err) {
       setError("Error connecting to the server.");
     } finally {
-      setLoading(false); // Desactivar el loading una vez terminada la función
+      setLoading(false);
     }
   };
 
@@ -84,7 +69,7 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
 
   return (
     <div className="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-6">
-      <h1 className="text-3xl font-semibold mb-6 text-center text-purple-800">Tournament Participants</h1>
+      <h1 className="text-3xl font-semibold mb-6 text-center text-purple-800">Admin Panel - Tournament</h1>
 
       <div className="flex gap-4 mb-6">
         <button
@@ -94,35 +79,45 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
           Refresh
         </button>
         <button
-          className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
           onClick={handleMatchGames}
-          disabled={loading} // Deshabilitar el botón mientras se carga
+          className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+          disabled={loading}
         >
           Match Games
         </button>
       </div>
 
-      {error && (
-        <p className="text-red-500 text-center">{error}</p>
-      )}
+      {error && <p className="text-red-500 text-center">{error}</p>}
 
       {participants.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 w-full max-w-4xl">
-          {participants.map((participant) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-5xl">
+          {participants.map((participant, index) => (
             <div
               key={participant.participantId}
-              className="bg-white rounded-lg shadow-md p-4 flex items-center justify-start gap-4"
-              style={{ height: "120px" }}
+              className="bg-white rounded-lg shadow-md p-4 flex items-center gap-4"
+              style={{ height: "100px" }}
             >
               <div
-                className="h-16 w-16 rounded-full bg-purple-200 flex items-center justify-center text-2xl font-bold text-purple-800"
+                className="h-16 w-16 rounded-full flex items-center justify-center text-2xl font-bold"
                 style={{
-                  backgroundColor: getRandomColor(),
+                  backgroundColor: getColorByIndex(index),
+                  color: "white",
+                  border: "2px solid black",
+                  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.3)",
                 }}
               >
-                {participant.participantName.charAt(0).toUpperCase()}
+                <span
+                  style={{
+                    textShadow: "1px 1px 2px rgba(0, 0, 0, 0.5)",
+                  }}
+                >
+                  {participant.participantName.charAt(0).toUpperCase()}
+                </span>
               </div>
-              <h2 className="text-md font-semibold text-gray-700">{participant.participantName}</h2>
+              <div className="flex flex-col">
+                <h2 className="text-lg font-semibold text-gray-800">{participant.participantName}</h2>
+                <p className="text-sm text-gray-500">Participant ID: {participant.participantId}</p>
+              </div>
             </div>
           ))}
         </div>
@@ -130,11 +125,10 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
         <p className="text-gray-700 text-center">No participants registered yet.</p>
       )}
 
-      {/* Pop-up de carga */}
       {loading && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
-          <div className="flex flex-col items-center justify-center bg-white p-8 rounded-lg shadow-lg">
-            <div className="loader"></div> {/* Aquí puedes agregar tu animación de carga */}
+          <div className="flex flex-col items-center justify-center bg-white p-6 rounded-lg shadow-lg">
+            <div className="loader"></div>
             <p className="text-lg text-purple-700 mt-4">Loading, please wait...</p>
           </div>
         </div>
@@ -143,10 +137,15 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
   );
 };
 
-// Function to generate random colors for cards
-const getRandomColor = () => {
-  const colors = ["#FCE38A", "#F38181", "#95E1D3", "#EAFFD0", "#B5EAEA"];
-  return colors[Math.floor(Math.random() * colors.length)];
+// Function to get a color based on the participant index
+const getColorByIndex = (index: number): string => {
+  const vibrantColors = [
+    "#FF5733", "#FF8D1A", "#FFC300", "#DAF7A6",
+    "#33FF57", "#1AFF8D", "#33C3FF", "#3380FF",
+    "#8D33FF", "#C300FF", "#FF33C3", "#FF3380",
+    "#FF6F33", "#FFAD33", "#DFFF33", "#33FFAD",
+  ];
+  return vibrantColors[index % vibrantColors.length];
 };
 
 export default ViewTournament;
