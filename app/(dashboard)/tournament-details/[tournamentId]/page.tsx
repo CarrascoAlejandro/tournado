@@ -33,48 +33,57 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
     }
   };
 
-  const handleMatchGames = async () => {
-    setLoading(true); // Activar el loading al principio de la acción
-
+  const handleMatchLogic = async () => {
+    setLoading(true); // Activar el indicador de carga
+  
     try {
-      // POST to start the tournament
-      const startRes = await fetch(`/api/dev/tournament/${tournamentId}/start`, {
-        method: "POST",
-      });
-  
-      const startData = await startRes.json();
-  
-      if (startRes.ok) {
-        console.log("Tournament started successfully.");
-      } else if (startData.error === "Tournament has already started") {
-        console.log("Tournament has already started. Proceeding to fetch existing brackets.");
-      } else {
-        // Handle error from POST
-        setError(startData.error || "Error starting the tournament.");
-        return;
-      }
-  
-      // GET the latest brackets and byes
+      // Intentar obtener los brackets del torneo
       const fetchRes = await fetch(`/api/dev/tournament/${tournamentId}/brackets`);
       const fetchData = await fetchRes.json();
   
       if (fetchRes.ok) {
-        // Save brackets and byes to localStorage
+        // Si ya hay brackets, guardarlos y navegar
         localStorage.setItem("matchBrackets", JSON.stringify(fetchData));
-  
-        // Navigate to the bracket page
         const tournamentUrl = `/bracket-tournament/${tournamentId}`;
         window.open(tournamentUrl, "_blank");
+        setError(null);
+      } else if (fetchData.error === "Tournament don't started yet") {
+        // Si el torneo no ha comenzado, proceder con POST para iniciarlo
+        const startRes = await fetch(`/api/dev/tournament/${tournamentId}/start`, {
+          method: "POST",
+        });
+        const startData = await startRes.json();
+  
+        if (startRes.ok) {
+          console.log("Tournament started successfully.");
+          // Obtener brackets nuevamente después de iniciar el torneo
+          const newFetchRes = await fetch(`/api/dev/tournament/${tournamentId}/brackets`);
+          const newFetchData = await newFetchRes.json();
+  
+          if (newFetchRes.ok) {
+            // Guardar y navegar después de iniciar
+            localStorage.setItem("matchBrackets", JSON.stringify(newFetchData));
+            const tournamentUrl = `/bracket-tournament/${tournamentId}`;
+            window.open(tournamentUrl, "_blank");
+            setError(null);
+          } else {
+            setError(newFetchData.error || "Error fetching tournament brackets after starting.");
+          }
+        } else {
+          // Manejar errores al intentar iniciar el torneo
+          setError(startData.error || "Error starting the tournament.");
+        }
       } else {
-        // Handle error from GET
+        // Manejar cualquier otro error en el fetch inicial
         setError(fetchData.error || "Error fetching tournament brackets.");
       }
     } catch (err) {
       setError("Error connecting to the server.");
     } finally {
-      setLoading(false); // Desactivar el loading una vez terminada la función
+      setLoading(false); // Desactivar el indicador de carga
     }
   };
+  
 
   useEffect(() => {
     if (tournamentId) {
@@ -95,7 +104,7 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
         </button>
         <button
           className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
-          onClick={handleMatchGames}
+          onClick={handleMatchLogic}
           disabled={loading} // Deshabilitar el botón mientras se carga
         >
           Match Games

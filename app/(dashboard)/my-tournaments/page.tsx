@@ -361,21 +361,24 @@ const TournamentsPage: React.FC = () => {
             </div>
   
             <div>
-              <label htmlFor="nMaxParticipants" className="block text-sm font-medium text-gray-700">
-                Max Participants:
-              </label>
-              <Input
-                type="number"
-                id="nMaxParticipants"
-                name="nMaxParticipants"
-                placeholder="Max participants"
-                value={String(formData.nMaxParticipants)}
-                onChange={handleChange}
-                min="2"
-                className="rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 w-full"
-                required
-              />
-            </div>
+                <label htmlFor="nMaxParticipants" className="block text-sm font-medium text-gray-700">
+                  Max Participants:
+                </label>
+                <Input
+                  type="number"
+                  id="nMaxParticipants"
+                  name="nMaxParticipants"
+                  placeholder="Max participants"
+                  value={formData.nMaxParticipants}
+                  onChange={handleChange}
+                  min="2" // Asegurar el mínimo permitido en el navegador
+                  max="32" // Asegurar el máximo permitido en el navegador
+                  className="rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 w-full"
+                  required
+                />
+              </div>
+
+
   
             <div>
               <label htmlFor="tags" className="block text-sm font-medium text-gray-700">
