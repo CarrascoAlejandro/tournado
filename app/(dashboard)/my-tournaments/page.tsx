@@ -222,16 +222,6 @@ const TournamentsPage: React.FC = () => {
     handleSubmitTournament();
     closeCreateModal();
   };
-
-  useEffect(() => {
-    if (showCreateSuccessDialog) {
-      const timer = setTimeout(() => {
-        setShowCreateSuccessDialog(false);
-      }, 3000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [showCreateSuccessDialog]);
   
   const renderDialog = () => {
     if (showCreateSuccessDialog) {
