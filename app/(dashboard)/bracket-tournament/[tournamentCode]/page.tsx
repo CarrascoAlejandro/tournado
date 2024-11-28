@@ -154,7 +154,7 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
         });
 
         // Refetch and render brackets after updating the match
-        fetchAndRenderBrackets();
+        // fetchAndRenderBrackets();
       }
     } catch (error) {
       console.error("Failed to update match:", error);
