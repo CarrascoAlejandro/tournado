@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, participants, getTournamentByCode, getParticipantCountByTournamentId } from "@/lib/db"; // Importamos el nuevo método
+import { db, participants, getTournamentByCode, getParticipantCountByTournamentId, getParticipantsByTournamentId } from "@/lib/db"; // Importamos el nuevo método
 import { eq } from "drizzle-orm";
 
 export async function POST(req: NextRequest) {
@@ -32,14 +32,24 @@ export async function POST(req: NextRequest) {
     }
 
     // Obtenemos la cantidad actual de participantes
-    const currentParticipantCount = await getParticipantCountByTournamentId(tournamentIdFromCode);
+    const currentParticipantList = await getParticipantsByTournamentId(tournamentIdFromCode);
 
     // Verificamos si el límite se ha alcanzado
-    if (currentParticipantCount >= tournamentFromCode.nMaxParticipants) {
+    if (currentParticipantList.length >= tournamentFromCode.nMaxParticipants) {
       return NextResponse.json(
         { error: "The tournament has reached the maximum number of participants." },
         { status: 403 }
       );
+    }
+
+    // Verificar si existe un participante con el mismo nombre
+    for (const participant of currentParticipantList) {
+      if (participant.participantName === participantName) {
+        return NextResponse.json(
+          { error: "A participant with the same name already exists in the tournament." },
+          { status: 400 }
+        );
+      }
     }
 
     // Insertamos el nuevo participante
@@ -60,7 +70,7 @@ export async function POST(req: NextRequest) {
       );
     }
   } catch (error) {
-    console.error("Error al insertar el participante:", error);
+    console.error("Error inserting the participant:", error);
     return NextResponse.json(
       { error: "Internal server error. Please try again later." },
       { status: 500 }

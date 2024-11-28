@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useEffect } from "react";
+import { Loader } from "@/components/ui/loader";
+import React, { useEffect, useState } from "react";
 
 const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
+  const [loading, setLoading] = useState(true);
   const { tournamentCode } = params;
 
   const fetchAndRenderBrackets = async () => {
@@ -25,6 +27,7 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
           matchGames: tournamentData.match_game,
           participants: tournamentData.participant,
         });
+        setLoading(false);
       } else {
         console.error("bracketsViewer is not defined on the window object.");
       }
@@ -37,7 +40,19 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
     fetchAndRenderBrackets();
   }, [tournamentCode]);
 
-  return <div className="brackets-viewer" />;
+  return (
+    <div
+      className="brackets-viewer"
+      style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+      {loading ? (
+        <div>
+          {Loader(250, 250)} 
+        </div> // Loading indicator // FIXME: make size depend on screen size
+      ) : (
+        <div id="brackets-container"></div> // Container for brackets
+      )}
+    </div>
+  );
 };
 
 export default BracketPage;

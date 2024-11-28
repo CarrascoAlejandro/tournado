@@ -12,6 +12,11 @@ import { signIn } from 'next-auth/react';
 import { FaGoogle, FaGithub, FaDiscord } from 'react-icons/fa';
 
 export default function LoginPage() {
+  // Función para redirigir al home
+  const redirectToHome = () => {
+    window.location.href = '/';
+  };
+
   return (
     <div
       className="min-h-screen flex justify-center items-center bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500 p-8"
@@ -67,6 +72,15 @@ export default function LoginPage() {
           >
             <FaDiscord className="text-2xl" />
             Sign in with Discord
+          </Button>
+
+          {/* Button to go back to home */}
+          <Button
+            onClick={redirectToHome}
+            className="w-full mt-4 text-gray-700 hover:text-white bg-transparent border border-gray-300 hover:bg-gray-800 transition-all duration-300 rounded-lg py-2"
+            size="lg"
+          >
+            <span className="text-lg">Go Home</span>
           </Button>
 
           <p className="text-center text-gray-500 text-xs mt-4">

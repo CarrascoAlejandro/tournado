@@ -18,6 +18,7 @@ import TournamentModal from '@/components/ui/tournament-modal';
 import { Tournament } from '@/components/ui/tournament-modal';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { set } from 'zod';
+import { Loader } from '@/components/ui/loader';
 
 
 const TournamentsPage: React.FC = () => {
@@ -109,7 +110,11 @@ const TournamentsPage: React.FC = () => {
     setSelectedTournament(null);
   };
 
-  if (status === 'loading') return <div>Loading...</div>;
+  if (status === 'loading') return (
+    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }} >
+      {Loader(250, 250)} 
+    </div> // Loading indicator // FIXME: make size depend on screen size;
+  )
 
   const openCreateModal = () => {
     console.log('Opening create modal');
@@ -361,21 +366,24 @@ const TournamentsPage: React.FC = () => {
             </div>
   
             <div>
-              <label htmlFor="nMaxParticipants" className="block text-sm font-medium text-gray-700">
-                Max Participants:
-              </label>
-              <Input
-                type="number"
-                id="nMaxParticipants"
-                name="nMaxParticipants"
-                placeholder="Max participants"
-                value={String(formData.nMaxParticipants)}
-                onChange={handleChange}
-                min="2"
-                className="rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 w-full"
-                required
-              />
-            </div>
+                <label htmlFor="nMaxParticipants" className="block text-sm font-medium text-gray-700">
+                  Max Participants:
+                </label>
+                <Input
+                  type="number"
+                  id="nMaxParticipants"
+                  name="nMaxParticipants"
+                  placeholder="Max participants"
+                  value={formData.nMaxParticipants}
+                  onChange={handleChange}
+                  min="2" // Asegurar el mínimo permitido en el navegador
+                  max="32" // Asegurar el máximo permitido en el navegador
+                  className="rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 w-full"
+                  required
+                />
+              </div>
+
+
   
             <div>
               <label htmlFor="tags" className="block text-sm font-medium text-gray-700">

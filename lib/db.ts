@@ -290,7 +290,7 @@ export async function updateTournamentStatus(tournamentId: number, status: "Soon
 export async function getParticipantsByTournamentId(tournamentId: number) {
   try {
     const participants_ids = await db
-      .select({ participantId: participants.participantId })
+      .select()
       .from(participants)
       .where(eq(participants.tournamentId, tournamentId));
 
@@ -421,7 +421,7 @@ export async function getRoundsByGroupId(groupId: number) {
 }
 
 // Insert a match
-export async function insertMatch(roundId: number, participant1Id: string, participant2Id: string, matchNumber: number) {
+export async function insertMatch(roundId: number, participant1Id: string | null, participant2Id: string | null, matchNumber: number) {
   try {
     await db.insert(matchBracket).values({ roundId, participant1Id, participant2Id, status: "pending", matchNumber, homeResult: 0, awayResult: 0 });
     console.log(`Match ${matchNumber} for round ${roundId} inserted successfully`);

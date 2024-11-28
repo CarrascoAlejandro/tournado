@@ -1,4 +1,4 @@
-GET http://localhost:3000/api/dev/tournament/20496668/brackets
+GET http://localhost:3000/api/dev/tournament/81512137/brackets
 Accept: application/json
 
 ###

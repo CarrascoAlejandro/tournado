@@ -10,10 +10,23 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import Link from 'next/link';
+import { redirect } from 'next/navigation'; // Redirección desde el servidor
+import { profile } from 'console';
 
 export async function User() {
-  let session = await auth();
-  let user = session?.user;
+  const session = await auth();
+  const user = session?.user;
+
+  async function handleSignOut() {
+    'use server'; 
+    
+    profile == null;
+    signOut(); 
+
+    redirect('/login');
+
+
+  }
 
   return (
     <DropdownMenu>
@@ -49,13 +62,12 @@ export async function User() {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <form
-                action={async () => {
-                  'use server';
-                  await signOut();
-                }}
-              >
-                <button type="submit" className="w-full text-left text-gray-700 hover:text-red-500">
+              {/* Formulario para cerrar sesión */}
+              <form action={handleSignOut} method="post">
+                <button
+                  type="submit"
+                  className="w-full text-left text-gray-700 hover:text-red-500"
+                >
                   Sign Out
                 </button>
               </form>
