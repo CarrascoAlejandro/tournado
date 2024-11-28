@@ -90,3 +90,15 @@ input[type='search']::-moz-search-cancel-button {
 input[type='search']::-ms-clear {
   display: none;
 }
+
+.skiptranslate {
+  display: none !important;
+}
+
+/* Ocultar el selector de Google Translate predeterminado */
+.goog-te-banner-frame.skiptranslate {
+  display: none !important;
+}
+body {
+  top: 0 !important;
+}

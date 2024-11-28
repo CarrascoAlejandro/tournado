@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
 interface Participant {
   participantId: number;
@@ -8,10 +8,7 @@ interface Participant {
   tournamentId: number;
 }
 
-
-
 const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
-
   const { tournamentId } = params;
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -26,10 +23,10 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
       if (res.ok) {
         setParticipants(data.participants);
       } else {
-        setError(data.error || "There was an error fetching the participants.");
+        setError(data.error || 'There was an error fetching the participants.');
       }
     } catch (error) {
-      setError("Error connecting to the server.");
+      setError('Error connecting to the server.');
     } finally {
       setLoading(false);
     }
@@ -38,42 +35,49 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
   const handleMatchGames = async () => {
     try {
       // POST to start the tournament
-      const startRes = await fetch(`/api/dev/tournament/${tournamentId}/start`, {
-        method: "POST",
-      });
-  
+      const startRes = await fetch(
+        `/api/dev/tournament/${tournamentId}/start`,
+        {
+          method: 'POST'
+        }
+      );
+
       const startData = await startRes.json();
-  
+
       if (startRes.ok) {
-        console.log("Tournament started successfully.");
-      } else if (startData.error === "Tournament has already started") {
-        console.log("Tournament has already started. Proceeding to fetch existing brackets.");
+        console.log('Tournament started successfully.');
+      } else if (startData.error === 'Tournament has already started') {
+        console.log(
+          'Tournament has already started. Proceeding to fetch existing brackets.'
+        );
       } else {
         // Handle error from POST
-        setError(startData.error || "Error starting the tournament.");
+        setError(startData.error || 'Error starting the tournament.');
         return;
       }
-  
+
       // GET the latest brackets and byes
-      const fetchRes = await fetch(`/api/dev/tournament/${tournamentId}/brackets`);
+      const fetchRes = await fetch(
+        `/api/dev/tournament/${tournamentId}/brackets`
+      );
       const fetchData = await fetchRes.json();
-  
+
       if (fetchRes.ok) {
         // Save brackets and byes to localStorage
-        localStorage.setItem("matchBrackets", JSON.stringify(fetchData));
-  
+        localStorage.setItem('matchBrackets', JSON.stringify(fetchData));
+
         // Navigate to the bracket page
         const tournamentUrl = `/bracket-tournament/${tournamentId}`;
-        window.open(tournamentUrl, "_blank");
+        window.open(tournamentUrl, '_blank');
       } else {
         // Handle error from GET
-        setError(fetchData.error || "Error fetching tournament brackets.");
+        setError(fetchData.error || 'Error fetching tournament brackets.');
       }
     } catch (err) {
-      setError("Error connecting to the server.");
+      setError('Error connecting to the server.');
     }
-  };  
-  
+  };
+
   useEffect(() => {
     if (tournamentId) {
       fetchParticipants();
@@ -83,7 +87,10 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
   // TODO: Mostrar el nombre del torneo en el título
   return (
     <div className="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-6">
-      <h1 className="text-3xl font-semibold mb-6 text-center text-purple-800">Tournament Participants</h1>
+      <div id="google_translate_element"></div>
+      <h1 className="text-3xl font-semibold mb-6 text-center text-purple-800">
+        Tournament Participants
+      </h1>
 
       <div className="flex gap-4 mb-6">
         <button
@@ -103,7 +110,9 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
       {loading ? (
         <div className="flex justify-center items-center">
           <div className="loader"></div>
-          <p className="text-lg text-purple-700 ml-4">Loading participants...</p>
+          <p className="text-lg text-purple-700 ml-4">
+            Loading participants...
+          </p>
         </div>
       ) : error ? (
         <p className="text-red-500 text-center">{error}</p>
@@ -113,22 +122,26 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
             <div
               key={participant.participantId}
               className="bg-white rounded-lg shadow-md p-4 flex items-center justify-start gap-4"
-              style={{ height: "120px" }}
+              style={{ height: '120px' }}
             >
               <div
                 className="h-16 w-16 rounded-full bg-purple-200 flex items-center justify-center text-2xl font-bold text-purple-800"
                 style={{
-                  backgroundColor: getRandomColor(),
+                  backgroundColor: getRandomColor()
                 }}
               >
                 {participant.participantName.charAt(0).toUpperCase()}
               </div>
-              <h2 className="text-md font-semibold text-gray-700">{participant.participantName}</h2>
+              <h2 className="text-md font-semibold text-gray-700">
+                {participant.participantName}
+              </h2>
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-gray-700 text-center">No participants registered yet.</p>
+        <p className="text-gray-700 text-center">
+          No participants registered yet.
+        </p>
       )}
     </div>
   );
@@ -136,7 +149,7 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
 
 // Function to generate random colors for cards
 const getRandomColor = () => {
-  const colors = ["#FCE38A", "#F38181", "#95E1D3", "#EAFFD0", "#B5EAEA"];
+  const colors = ['#FCE38A', '#F38181', '#95E1D3', '#EAFFD0', '#B5EAEA'];
   return colors[Math.floor(Math.random() * colors.length)];
 };
 

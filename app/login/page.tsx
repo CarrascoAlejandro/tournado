@@ -6,7 +6,7 @@ import {
   CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle,
+  CardTitle
 } from '@/components/ui/card';
 import { signIn } from 'next-auth/react';
 import { FaGoogle, FaGithub, FaDiscord } from 'react-icons/fa';
@@ -18,9 +18,10 @@ export default function LoginPage() {
       style={{
         backgroundImage: 'url(/static/background1.png)',
         backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        backgroundPosition: 'center'
       }}
     >
+      <div id="google_translate_element"></div>
       <Card className="w-full max-w-md bg-white/80 backdrop-blur-lg shadow-2xl rounded-lg overflow-hidden">
         <div className="flex justify-center p-6">
           <img
