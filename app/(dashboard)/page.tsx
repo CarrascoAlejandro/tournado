@@ -10,6 +10,8 @@
     const [showContent, setShowContent] = useState([false]);
     const [showContent2, setShowContent2] = useState([false]);
     const [activeStep, setActiveStep] = useState(0); // Para controlar el paso activo
+    const [isOpen, setIsOpen] = useState(false);
+  const [tournamentCode, setTournamentCode] = useState("");
 
 
     useEffect(() => {
@@ -98,6 +100,17 @@
 
     const images = ['img-sec3-p1.png', 'img-sec3-p2.png', 'img-sec3-p3.png', 'img-sec3-p4.png'];
 
+    const handleOpen = () => setIsOpen(true);
+    const handleClose = () => setIsOpen(false);
+
+    const handleSubmit = () => {
+      if (tournamentCode.trim() !== "") {
+        window.location.href = `/bracket-tournament/view/${tournamentCode}`;
+      } else {
+        alert("Por favor, ingresa un código de torneo válido.");
+      }
+      handleClose();
+    };
 
     return (
       <div>
@@ -179,6 +192,12 @@
                 Unirme a un torneo
               </Link>
 
+              <button
+                onClick={handleOpen}
+                className="px-6 py-3 bg-[#FFFFFF] text-[#1D3557] rounded-lg shadow-lg transition-transform transform hover:-translate-y-1"
+              >
+                Ver un torneo
+                </button>
             </div>
           </div>
           <img
@@ -187,7 +206,29 @@
             className="absolute bottom-0 left-0 w-full h-auto opacity-25"
           />
         </section>
-
+              {/* Pop-Up */}
+          {isOpen && (
+            <div className="popup-overlay">
+              <div className="popup-content">
+                <h2>Ingresar Código de Torneo</h2>
+                <input
+                  type="text"
+                  value={tournamentCode}
+                  onChange={(e) => setTournamentCode(e.target.value)}
+                  placeholder="Introduce el código aquí"
+                  className="input-field"
+                />
+                <div className="popup-actions">
+                  <button onClick={handleSubmit} className="btn-submit">
+                    Aceptar
+                  </button>
+                  <button onClick={handleClose} className="btn-cancel">
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         {/* Sección: ¿Por qué elegir Tournado? */}
         <section
           ref={setSectionRef(1)}
@@ -314,7 +355,7 @@
             </div>
           </div>
         </section>
-
+        
         {/* Pie de Página */}
         <footer className="bg-transparent py-6 text-center text-black">
           <p className="text-lg">
@@ -326,7 +367,65 @@
             <a href="#" className="text-[#097597] hover:underline ml-2">Contacto</a>
           </p>
         </footer>
-
+           {/* Estilos */}
+      <style jsx>{`
+        .popup-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.5);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+        .popup-content {
+          background: white;
+          padding: 20px;
+          border-radius: 8px;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+          text-align: center;
+          max-width: 400px;
+          width: 100%;
+        }
+        .input-field {
+          width: 90%;
+          padding: 8px;
+          margin: 10px 0;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+        }
+        .popup-actions {
+          display: flex;
+          justify-content: space-around;
+        }
+        .btn-submit,
+        .btn-cancel {
+          padding: 10px 20px;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+        .btn-submit {
+          background-color: #5086c1;
+          color: white;
+        }
+        .btn-cancel {
+          background-color: #666f88;
+          color: white;
+        }
+        .btn-open-popup {
+          padding: 10px 20px;
+          background-color: #008cba;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+      `}</style>     
       </div>
+      
     );
+    
   }
