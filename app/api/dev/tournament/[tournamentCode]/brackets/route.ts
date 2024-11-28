@@ -7,11 +7,12 @@ import {
     getMatchGamesByMatchId,
   } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
+import { number } from "zod";
 
 export async function GET(req: NextRequest, { params }: { params: { tournamentCode: string } }) {
     try {
         const { tournamentCode } = params;
-
+        console.log("en GET de brackets/route.ts");
         // Fetch tournament details
         const tournament = await getTournamentByCode(tournamentCode);
         if (!tournament) {
@@ -32,7 +33,7 @@ export async function GET(req: NextRequest, { params }: { params: { tournamentCo
         // Build the response
         const response: any = {
         participant: participants.map((participant) => ({
-            id: participant.participantId,
+            id: participant.participantId!= null ? participant.participantId : null,
             tournament_id: tournamentId,
             name: participant.participantName,
         })),
@@ -78,39 +79,58 @@ export async function GET(req: NextRequest, { params }: { params: { tournamentCo
 
             // Fetch data for each match
             for (const match of matches) {
+                
                 response.match.push({
                     id: match.matchId,
+                    number: match.matchNumber,
                     stage_id: tournamentId,
                     group_id: group.groupId,
                     round_id: round.roundId,
-                    number: match.matchNumber,
                     child_count: 0, // Assuming no "Best Of" matches unless specified
-                    status: match.status,
-                    opponent1: match.participant1Id
-                      ? match.participant1Id === "EMPTY_SPOT"
-                        ? { id: null }
-                        : { id: Number(match.participant1Id) }
-                      : null,
-                    opponent2: match.participant2Id
-                      ? match.participant2Id === "EMPTY_SPOT"
-                        ? { id: null }
-                        : { id: Number(match.participant2Id) }
-                      : null,
-                  });
-                  
-
+                    status: 4,
+                    opponent1: {
+                        id: match.participant1Id
+                            ? match.participant1Id == "EMPTY_SPOT"
+                                ? null
+                                : participants.some(p => p.participantId === Number(match.participant1Id))
+                                    ? Number(match.participant1Id)
+                                    : null
+                            : null,
+                        // position:1,
+                        score: match.homeResult? match.homeResult : "-",
+                        result:()=>{
+                            if(match.homeResult==null || match.awayResult==null) return "draw";
+                                else if(match.homeResult>match.homeResult) return "win";
+                                    else return "loss";
+                        }
+                    },
+                    opponent2:  {
+                        id: match.participant2Id
+                            ? match.participant2Id == "EMPTY_SPOT"
+                                ? null
+                                : participants.some(p => p.participantId === Number(match.participant2Id))
+                                    ? Number(match.participant2Id)
+                                    : null
+                            : null,
+                        // position:2,
+                        score: match.awayResult? match.awayResult : "-",
+                        result:()=>{
+                            if(match.homeResult==null || match.awayResult==null) return "draw";
+                                else if(match.awayResult>match.homeResult ) return "win";
+                                    else return "loss";
+                        }
+                    }
+                });
+            console.log("match before fetch: ", match);
             const matchGames = await getMatchGamesByMatchId(match.matchId);
-
+            console.log("match games after fetch: " + matchGames);
             // Fetch data for each match game
             for (const game of matchGames) {
                 response.match_game.push({
                 id: game.matchGameId,
                 stage_id: tournamentId,
                 parent_id: match.matchId,
-                number: response.match_game.length + 1,
-                participant1Score: game.participant1Score,
-                participant2Score: game.participant2Score,
-                gameStatus: game.gameStatus,
+                number: response.match_game.length + 1
                 });
             }
             }
