@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
+import Dialog from '@/components/ui/alert-dialog';
 
 const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
   const { tournamentCode } = params;
@@ -9,6 +10,12 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
   const [showInputMask, setShowInputMask] = useState(false);
   const opponent1Ref = useRef<HTMLInputElement>(null);
   const opponent2Ref = useRef<HTMLInputElement>(null);
+
+  const [showTieDialog, setShowTieDialog] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [winnerName, setWinnerName] = useState<string | null>(null);
+  const [result, setResult] = useState<string | null>(null);
 
 
 interface Participant {
@@ -53,18 +60,6 @@ interface Match {
           console.log("match", match)
           try {
             await getParticipant(match);
-            // console.log("o1", match.opponent1?.id)
-            // console.log("o1", match.opponent2?.id)
-            // const participant1 = await getParticipantsByMatchId(Number(match.opponent1?.id));
-            // console.log('Participantes:', participant1);
-            // const participant2 = await getParticipantsByMatchId(Number(match.opponent2?.id));
-            // console.log('Participantes:', participant2);
-
-            // setSelectedMatch({
-            //   ...match,
-            //   opponent1Name: participant1?.participantName || "Sin Nombre",
-            //   opponent2Name: participant2?.participantName || "Sin Nombre",
-            // });
           } catch (error) {
             console.error(error);
           }
@@ -95,39 +90,99 @@ interface Match {
               opponent2Name: participant2?.participantName || "Sin Nombre",
             });
   }
+
   const updateMatch = async () => {
     if (!selectedMatch || !opponent1Ref.current || !opponent2Ref.current) return;
 
     const score1 = Number(opponent1Ref.current.value);
     const score2 = Number(opponent2Ref.current.value);
 
+    if (score1 === score2) {
+      setShowInputMask(false); // Cerrar el modal de registro de resultados
+      setShowTieDialog(true); // Abrir el modal de empate
+      return;
+    }
+
+    const winner =
+      score1 > score2
+        ? selectedMatch?.opponent1Name
+        : selectedMatch?.opponent2Name;
+
+    setWinnerName(winner || "Sin nombre");
+    setResult(`${score1}-${score2}`);
+    setShowInputMask(false); // Cerrar el modal de registro
+    setShowConfirmDialog(true); // Mostrar el diálogo de confirmación
+  };
+
+  const confirmWinner = async () => {
     try {
-      console.log("score1",score1)
-      console.log("score2",score2)
+      const score1 = Number(opponent1Ref.current?.value);
+      const score2 = Number(opponent2Ref.current?.value);
+
       const scoreData = {
         homeResult: score1,
-        awayResult: score2
+        awayResult: score2,
       };
-    
-      console.log("scoreData", scoreData); // Verificar los datos antes de enviar
 
-      await fetch(`/api/dev/tournament/match/${selectedMatch.id}`, {
-        method: 'PUT',
+      await fetch(`/api/dev/tournament/match/${selectedMatch?.id}`, {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(scoreData),
       });
-      // console.log("body", body)
-      setShowInputMask(false);
-      // fetchAndRenderBrackets();
+
+      setShowConfirmDialog(false); // Cerrar el diálogo de confirmación
+      setShowSuccessDialog(true); // Mostrar el diálogo de éxito
+
       //FIXME
       // Forzar recarga completa de la página
-      window.location.reload();
+      window.location.reload(); // Recargar la página después de actualizar
     } catch (error) {
       console.error("Failed to update match:", error);
     }
   };
+
+  // const updateMatch = async () => {
+  //   if (!selectedMatch || !opponent1Ref.current || !opponent2Ref.current) return;
+
+  //   const score1 = Number(opponent1Ref.current.value);
+  //   const score2 = Number(opponent2Ref.current.value);
+
+  //   if (score1 === score2) {
+  //     // setShowResultDialog(false);
+  //     setShowTieDialog(true); // Mostrar alerta de empate
+  //     setShowInputMask(false);
+  //     return;
+  //   }
+
+  //   try {
+  //     console.log("score1",score1)
+  //     console.log("score2",score2)
+  //     const scoreData = {
+  //       homeResult: score1,
+  //       awayResult: score2
+  //     };
+    
+  //     console.log("scoreData", scoreData); // Verificar los datos antes de enviar
+
+  //     await fetch(`/api/dev/tournament/match/${selectedMatch.id}`, {
+  //       method: 'PUT',
+  //       headers: {
+  //         'Content-Type': 'application/json'
+  //       },
+  //       body: JSON.stringify(scoreData),
+  //     });
+  //     // console.log("body", body)
+  //     setShowInputMask(false);
+  //     // fetchAndRenderBrackets();
+  //     //FIXME
+  //     // Forzar recarga completa de la página
+  //     window.location.reload();
+  //   } catch (error) {
+  //     console.error("Failed to update match:", error);
+  //   }
+  // };
 
   const getParticipantsByMatchId = async (matchID:number) => {
     try {
@@ -212,8 +267,8 @@ interface Match {
       fontSize: "1rem",
       border: "none",
       borderRadius: "8px",
-      backgroundColor: "#ccc",
-      color: "#000",
+      backgroundColor: "#374151",
+      color: "#fff",
       cursor: "pointer",
     },
     confirmButton: {
@@ -226,10 +281,162 @@ interface Match {
       cursor: "pointer",
     },
   };
+
+  // Renderizar diálogos según el estado
+  const renderDialog = () => {
+    if (showTieDialog) {
+      return (
+        <Dialog
+          visible={showTieDialog}
+          onHide={() => setShowTieDialog(false)}
+          header="Tie Detected"
+          color="warning"
+          icon={<span>⚠️</span>} // Icono de advertencia
+          footer={
+            <>
+              <button
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: "#374151",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                }}
+                // onClick={() => setShowTieDialog(false)}
+                  onClick={() => {
+                    setShowTieDialog(false); // Cerrar el modal de empate
+                    setShowInputMask(false); // Reabrir el modal de registro
+                  }}
+              >
+                Cancel
+              </button>
+              <button
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: "#4F46E5",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                }}
+                // onClick={() => setShowTieDialog(false)}
+                onClick={() => {
+                  setShowTieDialog(false); // Cerrar el modal de empate
+                  setShowInputMask(true); // Reabrir el modal de registro
+                }}
+              >
+                Confirmar
+              </button>
+            </>
+          }
+        >
+          <p>
+          A tie result has been recorded. However, it is necessary to choose a
+            winner to proceed to the next phase of the tournament. 
+            Please enter another result.
+          </p>
+        </Dialog>
+      );
+    }
+
+    if (showConfirmDialog) {
+      return (
+        <Dialog
+          visible={showConfirmDialog}
+          onHide={() => setShowConfirmDialog(false)}
+          header="Register Result"
+          color="info"
+          icon={<span>ℹ️</span>}
+          footer={
+            <>
+              <button
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: "#374151",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                }}
+                // onClick={() => setShowConfirmDialog(false)}
+                onClick={() => {
+                  setShowConfirmDialog(false); // Cerrar el modal 
+                  setShowInputMask(true); // Reabrir el modal de registro
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: "#4F46E5",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                }}
+                onClick={confirmWinner}
+              >
+                Confirmar
+              </button>
+            </>
+          }
+        >
+          <p>
+            Are you sure you want to register <strong>{winnerName}</strong> as the winner
+            of the match between {selectedMatch?.opponent1Name} and{" "}
+            {selectedMatch?.opponent2Name} with a score of <strong>{result}</strong>?
+          </p>
+        </Dialog>
+      );
+    }
+
+    if (showSuccessDialog) {
+      return (
+        <Dialog
+          visible={showSuccessDialog}
+          onHide={() => setShowSuccessDialog(false)}
+          header="Result Registered!"
+          color="success"
+          icon={<span>✓</span>}
+          footer={
+            <button
+              style={{
+                padding: "10px 20px",
+                backgroundColor: "#4F46E5",
+                color: "#fff",
+                border: "none",
+                borderRadius: "8px",
+                cursor: "pointer",
+              }}
+              onClick={() => setShowSuccessDialog(false)}
+            >
+              Aceptar
+            </button>
+          }
+        >
+          <p>
+          The result has been successfully recorded for <strong>{winnerName}</strong> as the winner
+            with a score of {result}.
+          </p>
+        </Dialog>
+      );
+    }
+
+    return null; // Si no hay diálogos activos, no renderiza nada
+  };
+
+
   // return <div className="brackets-viewer" />;
   return (
     <div>
       <div className="brackets-viewer" />
+
+      {/* Renderizar el diálogo dinámicamente */}
+      {renderDialog()}
+
+      {/* score */}
       {showInputMask && selectedMatch && (
         <div style={styles.overlay} onClick={() => setShowInputMask(false)}>
           <div
