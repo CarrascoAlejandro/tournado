@@ -94,6 +94,7 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
 
   return (
     <div className="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-6">
+      <div id="google_translate_element"></div>
       <h1 className="text-3xl font-semibold mb-6 text-center text-purple-800">Tournament Participants</h1>
 
       <div className="flex gap-4 mb-6">
