@@ -88,38 +88,34 @@ export async function GET(req: NextRequest, { params }: { params: { tournamentCo
                     round_id: round.roundId,
                     child_count: 0, // Assuming no "Best Of" matches unless specified
                     status: 4,
-                    opponent1: {
-                        id: match.participant1Id
-                            ? match.participant1Id == "EMPTY_SPOT"
-                                ? null
-                                : participants.some(p => p.participantId === Number(match.participant1Id))
-                                    ? Number(match.participant1Id)
-                                    : null
+                    opponent1: match.participant1Id
+                            ? match.participant1Id === "EMPTY_SPOT"
+                                ? { id: null, score: "-", result: "draw" }
+                                : {
+                                    id: Number(match.participant1Id),
+                                    score: match.homeResult == 0 || match.homeResult == null ? "-" : match.homeResult,
+                                    // result: match.homeResult == null || match.awayResult == null
+                                    //     ? "draw"
+                                    //     : match.homeResult > match.awayResult
+                                    //         ? "win"
+                                    //         : "loss"
+                                }
                             : null,
-                        // position:1,
-                        score: match.homeResult? match.homeResult : "-",
-                        result:()=>{
-                            if(match.homeResult==null || match.awayResult==null) return "draw";
-                                else if(match.homeResult>match.homeResult) return "win";
-                                    else return "loss";
-                        }
-                    },
-                    opponent2:  {
-                        id: match.participant2Id
-                            ? match.participant2Id == "EMPTY_SPOT"
-                                ? null
-                                : participants.some(p => p.participantId === Number(match.participant2Id))
-                                    ? Number(match.participant2Id)
-                                    : null
-                            : null,
-                        // position:2,
-                        score: match.awayResult? match.awayResult : "-",
-                        result:()=>{
-                            if(match.homeResult==null || match.awayResult==null) return "draw";
-                                else if(match.awayResult>match.homeResult ) return "win";
-                                    else return "loss";
-                        }
-                    }
+
+                        opponent2: match.participant2Id
+                            ? match.participant2Id === "EMPTY_SPOT"
+                                ? { id: null, score: "-", result: "draw" }
+                                : {
+                                    id: Number(match.participant2Id),
+                                    score: match.awayResult == 0 || match.awayResult == null ? "-" : match.awayResult,
+                                    // result: match.homeResult == null || match.awayResult == null
+                                    //     ? "draw"
+                                    //     : match.awayResult > match.homeResult
+                                    //         ? "win"
+                                    //         : "loss"
+                                }
+                            : null
+
                 });
             console.log("match before fetch: ", match);
             const matchGames = await getMatchGamesByMatchId(match.matchId);
