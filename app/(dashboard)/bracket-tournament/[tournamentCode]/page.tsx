@@ -1,5 +1,6 @@
 "use client";
 
+import { Console } from "console";
 import React, { useEffect, useState, useRef } from "react";
 // import styles from "@/app/BracketPage.module.css";
 
@@ -12,6 +13,16 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
   // const opponent2Ref = useRef(null);
   const opponent1Ref = useRef<HTMLInputElement>(null);
   const opponent2Ref = useRef<HTMLInputElement>(null);
+  // const [scoreData, setScoreData] = useState({
+  //   homeResult:'',
+  //   awayResult: ''
+  // });
+  /*{
+
+    homeResult: score1,
+    awayResult: score2
+    
+  } */
 
 interface Participant {
   id: number;
@@ -51,8 +62,8 @@ interface Match {
           try {
             const id = Number(match.id);
             console.log("matchID", match.id)
-            const participants = await getParticipantsByMatchId(id);
-            console.log('Participantes:', participants);
+            // const participants = await getParticipantsByMatchId(id);
+            // console.log('Participantes:', participants);
           } catch (error) {
             console.error(error);
           }
@@ -71,25 +82,32 @@ interface Match {
   const updateMatch = async () => {
     if (!selectedMatch || !opponent1Ref.current || !opponent2Ref.current) return;
 
-    const score1 = opponent1Ref.current.value;
-    const score2 = opponent2Ref.current.value;
+    const score1 = Number(opponent1Ref.current.value);
+    const score2 = Number(opponent2Ref.current.value);
 
     try {
       console.log("score1",score1)
       console.log("score2",score2)
-      // await fetch(`/api/dev/match/${selectedMatch.id}`, {
-      //   method: 'PUT',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({
-      //     opponent1Score: score1,
-      //     opponent2Score: score2,
-      //   }),
-      // });
+      const scoreData = {
+        homeResult: score1,
+        awayResult: score2
+      };
+    
+      console.log("scoreData", scoreData); // Verificar los datos antes de enviar
 
+      await fetch(`/api/dev/tournament/match/${selectedMatch.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(scoreData),
+      });
+      // console.log("body", body)
       setShowInputMask(false);
       // fetchAndRenderBrackets();
+      //FIXME
+      // Forzar recarga completa de la página
+      window.location.reload();
     } catch (error) {
       console.error("Failed to update match:", error);
     }
