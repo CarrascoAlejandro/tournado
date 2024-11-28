@@ -16,8 +16,10 @@ import Modal from '@/components/ui/modal';
 import { Input } from '@/components/ui/input';
 import TournamentModal from '@/components/ui/tournament-modal';
 import { Tournament } from '@/components/ui/tournament-modal';
+import Dialog from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { set } from 'zod';
+import { Loader } from '@/components/ui/loader';
 
 
 const TournamentsPage: React.FC = () => {
@@ -27,6 +29,8 @@ const TournamentsPage: React.FC = () => {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false); 
   const [error, setError] = useState(""); 
+  const [showCreateSuccessDialog, setShowCreateSuccessDialog] = useState(false);
+
   const [formData, setFormData] = useState({
     tournamentCode:'',
     tournamentName: '',
@@ -82,6 +86,7 @@ const TournamentsPage: React.FC = () => {
         // Aquí puedes manejar el cierre del modal o mostrar un mensaje de éxito
         await fetchTournaments();
         setIsCreateModalOpen(false);
+        setShowCreateSuccessDialog(true); // Mostrar el diálogo de éxito
         setFormData({
           tournamentCode: '',
           tournamentName: '',
@@ -109,7 +114,11 @@ const TournamentsPage: React.FC = () => {
     setSelectedTournament(null);
   };
 
-  if (status === 'loading') return <div>Loading...</div>;
+  if (status === 'loading') return (
+    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }} >
+      {Loader(250, 250)} 
+    </div> // Loading indicator // FIXME: make size depend on screen size;
+  )
 
   const openCreateModal = () => {
     console.log('Opening create modal');
@@ -214,8 +223,33 @@ const TournamentsPage: React.FC = () => {
     closeCreateModal();
   };
   
+  const renderDialog = () => {
+    if (showCreateSuccessDialog) {
+      return (
+        <Dialog
+          visible={showCreateSuccessDialog}
+          onHide={() => setShowCreateSuccessDialog(false)}
+          header="Tournament Created!"
+          color="success"
+          icon={<span>✓</span>}
+        >
+          <p>
+            The tournament <strong>{formData.tournamentName}</strong> has been
+            successfully created!
+          </p>
+        </Dialog>
+      );
+    }
+  
+    return null; // Si no hay diálogos activos, no renderiza nada
+  };
+  
+  
   return (
     <div>
+      {/* Renderizar los diálogos dinámicamente */}
+      {renderDialog()}
+
       <Card className="shadow-lg rounded-xl bg-white p-6">
         <CardHeader>
           <CardTitle className="text-xl font-semibold text-gray-800">My Tournaments</CardTitle>
@@ -239,7 +273,15 @@ const TournamentsPage: React.FC = () => {
             )}
           </div>
   
-          {session && (
+          {/* {session && ( */}
+          {session && tournaments.length === 0 ? (
+            // Mensaje cuando no hay torneos creados
+            <div className="text-center text-gray-500 py-4">
+              <p>You don't have any tournaments created yet.</p>
+              <p>Click on "Create Tournament" to get started!</p>
+            </div>
+          ) : (
+            // Tabla de torneos si hay datos
             <Table className="min-w-full border-collapse bg-white rounded-lg shadow-md">
               <TableHeader>
                 <TableRow className="text-gray-700 bg-indigo-100">

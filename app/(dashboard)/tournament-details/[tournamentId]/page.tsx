@@ -1,5 +1,6 @@
 "use client";
 
+import { Loader } from "@/components/ui/loader";
 import { useEffect, useState } from "react";
 
 interface Participant {
@@ -93,6 +94,7 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
 
   return (
     <div className="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-6">
+      <div id="google_translate_element"></div>
       <h1 className="text-3xl font-semibold mb-6 text-center text-purple-800">Tournament Participants</h1>
 
       <div className="flex gap-4 mb-6">
@@ -143,7 +145,7 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
       {loading && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
           <div className="flex flex-col items-center justify-center bg-white p-8 rounded-lg shadow-lg">
-            <div className="loader"></div> {/* Aquí puedes agregar tu animación de carga */}
+            <div className="loader"></div> {Loader(250, 250)}
             <p className="text-lg text-purple-700 mt-4">Loading, please wait...</p>
           </div>
         </div>

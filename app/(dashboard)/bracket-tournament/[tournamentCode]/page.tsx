@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
+import { Loader } from "@/components/ui/loader";
 
 const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
+  const [loading, setLoading] = useState(true);
   const { tournamentCode } = params;
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [showInputMask, setShowInputMask] = useState(false);
@@ -64,6 +66,7 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
           console.log("o1", match.opponent2?.id);
           setShowInputMask(true);
         };
+        setLoading(false);
       } else {
         console.error("bracketsViewer is not defined on the window object.");
       }
