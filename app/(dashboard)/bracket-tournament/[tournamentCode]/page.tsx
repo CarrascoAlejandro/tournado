@@ -67,6 +67,7 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
           setShowInputMask(true);
         };
         setLoading(false);
+        
       } else {
         console.error("bracketsViewer is not defined on the window object.");
       }
@@ -151,6 +152,7 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
           })
           .then(data => {
             console.log("Respuesta de la solicitud PATCH:", data);
+            window.location.reload();
           })
           .catch(error => {
             console.error("Error al realizar la solicitud PATCH:", error);
