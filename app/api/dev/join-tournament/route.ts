@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
 
     if (!tournamentId || !participantName) {
       return NextResponse.json(
-        { error: "Todos los campos son obligatorios." },
+        { error: "All fields are required." },
         { status: 400 }
       );
     }
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
 
     if (!tournamentFromCode) {
       return NextResponse.json(
-        { error: "El código de torneo no es válido o no existe" },
+        { error: "The tournament code is invalid or does not exist." },
         { status: 400 }
       );
     }
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
 
     if (!tournamentIdFromCode) {
       return NextResponse.json(
-        { error: "El código de torneo no es válido o no existe" },
+        { error: "The tournament code is invalid or does not exist." },
         { status: 400 }
       );
     }
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     // Verificamos si el límite se ha alcanzado
     if (currentParticipantCount >= tournamentFromCode.nMaxParticipants) {
       return NextResponse.json(
-        { error: "El torneo ha alcanzado el número máximo de participantes." },
+        { error: "The tournament has reached the maximum number of participants." },
         { status: 403 }
       );
     }
@@ -50,19 +50,19 @@ export async function POST(req: NextRequest) {
 
     if (result) {
       return NextResponse.json(
-        { message: "Participante registrado con éxito" },
+        { message: "Participant successfully registered." },
         { status: 201 }
       );
     } else {
       return NextResponse.json(
-        { error: "Error al registrar el participante. Por favor, inténtalo de nuevo más tarde." },
+        { error: "Error registering participant. Please try again later." },
         { status: 500 }
       );
     }
   } catch (error) {
     console.error("Error al insertar el participante:", error);
     return NextResponse.json(
-      { error: "Error interno del servidor. Por favor, intenta más tarde." },
+      { error: "Internal server error. Please try again later." },
       { status: 500 }
     );
   }

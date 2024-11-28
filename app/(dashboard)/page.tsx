@@ -79,20 +79,20 @@
 
     const steps = [
       {
-        title: 'Registro de Participantes',
-        description: 'Permite registrar a los jugadores o equipos participantes en el torneo de manera rápida y sencilla.',
+        title: 'Registration of participants',
+        description: 'It allows you to register players or teams participating in the tournament quickly and easily.',
       },
       {
-        title: 'Creación de Torneos',
-        description: 'Configura los detalles del torneo, como el tipo de eliminación, las rondas y los horarios de cada partido.',
+        title: 'Create Tournaments',
+        description: 'Configure tournament details such as elimination type, rounds, and schedules for each match.',
       },
       {
-        title: 'Seguimiento en Tiempo Real',
-        description: 'Visualiza el progreso del torneo con actualizaciones en tiempo real de los resultados de cada enfrentamiento.',
+        title: 'Real Time Tracking',
+        description: 'View tournament progress with real-time updates on the results of each matchup.',
       },
       {
-        title: 'Resultados y Clasificaciones',
-        description: 'Accede a los resultados finales y clasificaciones, asegurando transparencia y una experiencia profesional.',
+        title: 'Results and Classification',
+        description: 'Access final results and rankings, ensuring transparency and a professional experience.',
       },
     ];
 
@@ -105,10 +105,10 @@
         <nav className="fixed top-8 left-4 w-full bg-transparent z-50">
           <div className="container mx-auto flex space-x-8">
             {[
-              { label: 'Bienvenido', icon: <Info className="h-5 w-5" /> },
-              { label: '¿Por qué elegir Tournado?', icon: <CheckCircle className="h-5 w-5" /> },
-              { label: '¿Cómo Funciona?', icon: <PlayCircle className="h-5 w-5" /> },
-              { label: 'Nuestra Misión', icon: <Target className="h-5 w-5" /> }
+              { label: 'Welcome', icon: <Info className="h-5 w-5" /> },
+              { label: 'Why choose tournado?', icon: <CheckCircle className="h-5 w-5" /> },
+              { label: 'How it works?', icon: <PlayCircle className="h-5 w-5" /> },
+              { label: 'Our Vision', icon: <Target className="h-5 w-5" /> }
             ].map((section, index) => (
               <button
                 key={index}
@@ -144,15 +144,15 @@
                 showContent[0] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
               }`}
             >
-              Bienvenido a <span className="text-[#8dcfd1]">Tournado</span>
+              Welcome to <span className="text-[#8dcfd1]">Tournado</span>
             </h1>
             <p
-              className={`text-lg text-white mb-6 transition-all duration-1000 ease-in-out delay-200 ${
+              className={`text-lg text-white mb-6 leading-relaxed transition-all duration-1000 ease-in-out delay-200 ${
                 showContent[0] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
               }`}
             >
-              Tournado es un sistema web diseñado para la gestión eficiente de torneos deportivos de eliminación simple. 
-              Permite a los administradores crear eventos, registrar competidores y seguir el avance de cada etapa hasta obtener un ganador final.
+              Tournado is a web-based system designed for the efficient management of single-elimination sports tournaments. <br/>
+              It allows administrators to create events, register competitors and track the progress of each stage until a final winner is obtained.
             </p>
             <div
               className={`flex justify-center gap-4 transition-all duration-1000 ease-in-out delay-400 ${
@@ -163,7 +163,7 @@
                 onClick={() => sectionRefs.current[2]?.scrollIntoView({ behavior: 'smooth' })}
                 className="px-6 py-3 bg-[#FFFFFF] text-[#1D3557] rounded-lg shadow-lg transition-transform transform hover:-translate-y-1"
               >
-                Aprende Más
+                Learn More
               </button>
               <Link
                 href="/my-tournaments"
@@ -176,7 +176,7 @@
                 href="/join-tournament"
                 className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-700 text-white border border-red-600 rounded-lg shadow-md transform transition-transform duration-300 hover:scale-105 hover:shadow-xl hover:from-red-600 hover:to-red-800"
               >
-                Unirme a un torneo
+                Join a Tournament
               </Link>
 
             </div>
@@ -197,19 +197,19 @@
           <div className="container mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
             <div className={`ml-4 md:w-1/2 transition-all duration-1000 ease-in-out 
               ${showContent2[1] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-              <h2 className="text-4xl font-bold text-[#1D3557]">¿Por qué elegir Tournado?</h2>
+              <h2 className="text-4xl font-bold text-[#1D3557]">Why choose Tournado?</h2>
               <p className="mt-4 text-lg text-[#457B9D]">
-                Organiza torneos y competiciones de forma eficiente, con total transparencia en los resultados y seguimiento en tiempo real.
+              Organize tournaments and competitions efficiently, with complete transparency in results and real-time monitoring.
               </p>
               <ul className="mt-4 list-disc list-inside text-lg text-[#457B9D]">
-                <li>Organización eficiente de torneos y competiciones.</li>
-                <li>Transparencia en clasificaciones y resultados.</li>
-                <li>Seguimiento en tiempo real de enfrentamientos y avances.</li>
-                <li>Ideal para torneos de eliminación directa.</li>
+                <li>Efficient organization of tournaments and competitions.</li>
+                <li>Transparency in rankings and results.</li>
+                <li>Real-time tracking of clashes and progress.</li>
+                <li>Ideal for knockout tournaments.</li>
               </ul>
               <button className="inline-block mt-4 text-[#1D3557] font-semibold hover:underline"
                 onClick={() => sectionRefs.current[2]?.scrollIntoView({ behavior: 'smooth' })}>
-                Aprende más →
+                Learn more →
               </button>
             </div>
             <div className={`md:w-1/2`}>
@@ -228,7 +228,7 @@
           <div className="container mx-auto flex flex-col md:flex-row items-start justify-between gap-8">
             <div className="md:w-1/2 mr-12">
             {/* from-[#097597] to-[#A29BFE] */}
-              <h2 className="text-4xl font-bold text-[#097597] mb-4">¿Cómo Funciona Tournado?</h2>
+              <h2 className="text-4xl font-bold text-[#097597] mb-4">How does Tournado work?</h2>
               <div className="relative">
                 <div className="absolute left-6 top-0 h-full border-l-2 border-gray-300" />
                 <div className="space-y-6 pl-10">
@@ -301,15 +301,15 @@
             
             {/* Contenido de texto a la derecha */}
             <div className={`ml-4 md:w-1/2 transition-all duration-1000 ease-in-out ${showContent2[1] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-              <h2 className="text-4xl font-bold text-[#1D3557]">Nuestra Visión</h2>
+              <h2 className="text-4xl font-bold text-[#1D3557]">Our Vision</h2>
               <p className="mt-4 text-lg text-[#457B9D]">
-                En Tournado, imaginamos un mundo donde la gestión de torneos sea simple, accesible y transparente para todos. Nuestro objetivo es proporcionar una plataforma intuitiva que permita a los organizadores de eventos deportivos concentrarse en lo que más importa: el juego.
+                At Tournado, we envision a world where tournament management is simple, accessible and transparent for everyone. Our goal is to provide an intuitive platform that allows esports event organizers to focus on what matters most:<br/><br/><b>The game</b>
               </p>
               <ul className="mt-4 list-disc list-inside text-lg text-[#457B9D]">
-                <li>Facilitamos la conexión entre jugadores y organizadores.</li>
-                <li>Mejoramos la transparencia en los resultados y clasificaciones.</li>
-                <li>Promovemos la equidad y el deporte justo en cada torneo.</li>
-                <li>Creemos en la innovación constante para mejorar la experiencia de los usuarios.</li>
+                <li>We facilitate the connection between players and organizers.</li>
+                <li>We have improved transparency in results and rankings.</li>
+                <li>We promote equity and fair sport in every tournament.</li>
+                <li>We believe in constant innovation to improve the user experience.</li>
               </ul>
             </div>
           </div>
@@ -318,12 +318,12 @@
         {/* Pie de Página */}
         <footer className="bg-transparent py-6 text-center text-black">
           <p className="text-lg">
-            &copy; {new Date().getFullYear()} Tournado. Todos los derechos reservados.
+            &copy; {new Date().getFullYear()} Tournado. All rights reserved.
           </p>
           <p className="mt-2 text-sm">
-            <a href="#" className="text-[#097597] hover:underline">Política de Privacidad</a> | 
-            <a href="#" className="text-[#097597] hover:underline ml-2">Términos de Servicio</a> | 
-            <a href="#" className="text-[#097597] hover:underline ml-2">Contacto</a>
+            <a href="#" className="text-[#097597] hover:underline">Privacy Policy</a> | 
+            <a href="#" className="text-[#097597] hover:underline ml-2">Terms of Service</a> | 
+            <a href="#" className="text-[#097597] hover:underline ml-2">Contact</a>
           </p>
         </footer>
 
