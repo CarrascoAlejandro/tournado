@@ -7,7 +7,7 @@ import {
     getMatchGamesByMatchId,
   } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
-import { number } from "zod";
+
 
 export async function GET(req: NextRequest, { params }: { params: { tournamentCode: string } }) {
     try {

@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
+import {updateParticipantMatch} from "utils/update-participant-match";
+import { set } from "zod";
+
 
 const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
   const { tournamentCode } = params;
@@ -9,6 +12,11 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
   const [showInputMask, setShowInputMask] = useState(false);
   const opponent1Ref = useRef<HTMLInputElement>(null);
   const opponent2Ref = useRef<HTMLInputElement>(null);
+  const [tournamentId, setTournamentId] = useState<number | null>(null);
+  const [opponentPassedId, setOpponentPassedId] = useState<number | null>(null);
+  const [roundId, setRoundId] = useState<number | null>(null);
+  const [matchId, setMatchId] = useState<number | null>(null);
+  const [ready, setReady] = useState(false);
 
 
 interface Participant {
@@ -25,8 +33,39 @@ interface Match {
   } | null;
   opponent1Name?: string; // Opcional, porque puede no estar disponible al inicio
   opponent2Name?: string; // Opcional, porque puede no estar disponible al inicio
+  round_id?: number;
 }
 
+// Si quieres ver cuando se actualiza roundId
+useEffect(() => {
+  console.log("match guardado con round id", roundId);
+  console.log("match guardado con match id", matchId);
+  setReady(false);
+}, [roundId, matchId]); // Esto se ejecutará cada vez que roundId cambie
+useEffect(() => {
+  console.log("match guardado con opponentPassedId", opponentPassedId);
+  setReady(true);
+}, [ opponentPassedId]); // Esto se ejecutará cada vez que roundId cambie
+
+useEffect(() => {
+  const fetchData = async () => {
+    if (ready) {
+      try {
+        const updatedMatch = await updateParticipantMatch({
+          tournamentId: Number(tournamentId) ?? 0,
+          roundId: roundId ?? 0,
+          previousMatchId: matchId ?? 0,
+          participantId: opponentPassedId ?? 0,
+        });
+        console.log("updatedMatch", updatedMatch);
+      } catch (error) {
+        console.error("Error updating match:", error);
+      }
+    }
+  };
+
+  fetchData(); // Llama a la función async
+}, [ready]); // Esto se ejecutará cada vez que 'ready' cambie
 
   const fetchAndRenderBrackets = async () => {
     try {
@@ -39,6 +78,9 @@ interface Match {
 
       const tournamentData = await res.json();
       console.log("Fetched tournament data:", tournamentData);
+      //aqui TT no te pierdas
+      console.log("tournamentData.stage[0].tournamentId", tournamentData.stage[0].id)
+      setTournamentId(Number(tournamentData.stage[0].id)); 
 
       // Render the brackets using the fetched data
       if (window.bracketsViewer) {
@@ -49,10 +91,17 @@ interface Match {
           participants: tournamentData.participant,
         });
         window.bracketsViewer.onMatchClicked = async (match: any) => {
-          setSelectedMatch(match);
+          
           console.log("match", match)
+
+          console.log("match con round id" , Number(match.round_id));
+          setRoundId(Number(match.round_id));
+          setMatchId(Number(match.id));
+          // console.log("match con su id" , selectedMatch?.id);
           try {
+            setSelectedMatch(match);
             await getParticipant(match);
+
             // console.log("o1", match.opponent1?.id)
             // console.log("o1", match.opponent2?.id)
             // const participant1 = await getParticipantsByMatchId(Number(match.opponent1?.id));
@@ -93,7 +142,9 @@ interface Match {
               ...match,
               opponent1Name: participant1?.participantName || "Sin Nombre",
               opponent2Name: participant2?.participantName || "Sin Nombre",
+              round_id: match.round_id??0,
             });
+    // console.log("selectedMatch round id:", selectedMatch?.round_id?.toString())
   }
   const updateMatch = async () => {
     if (!selectedMatch || !opponent1Ref.current || !opponent2Ref.current) return;
@@ -120,10 +171,30 @@ interface Match {
       });
       // console.log("body", body)
       setShowInputMask(false);
+      let participantId=0;
+      if(selectedMatch.opponent1?.id && selectedMatch.opponent2?.id){
+        if(score1 > score2){
+          participantId = selectedMatch.opponent1?.id;
+          setOpponentPassedId(selectedMatch.opponent1?.id);
+          }else{
+            participantId = selectedMatch.opponent2?.id;
+            setOpponentPassedId(selectedMatch.opponent2?.id);
+          }
+          console.log("participantId", participantId)
+          // if(ready){
+          //   const updatedMatch = await updateParticipantMatch({
+          //     tournamentId: tournamentId ?? 0,
+          //     roundId: roundId ?? 0,
+          //     previousMatchId: matchId ?? 0,
+          //     participantId: opponentPassedId ?? 0,
+          //   });
+          //   console.log("updatedMatch", updatedMatch);
+          // }
+      }
       // fetchAndRenderBrackets();
       //FIXME
       // Forzar recarga completa de la página
-      window.location.reload();
+      // window.location.reload();
     } catch (error) {
       console.error("Failed to update match:", error);
     }

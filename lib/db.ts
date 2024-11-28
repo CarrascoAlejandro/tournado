@@ -367,7 +367,6 @@ export async function getTournamentNameByCode(tournamentCode: string) {
   }
 }
 
-
 // Insert a group
 export async function insertGroup(tournamentId: number, groupNumber: number) {
   try {
@@ -445,6 +444,19 @@ export async function getMatchesByRoundId(roundId: number) {
     throw error;
   }
 }
+export async function getMatchByRoundIdAndMatchNumber(roundId: number, matchNumber: number) {
+  try {
+    const matchResult = await db
+      .select()
+      .from(matchBracket)
+      .where(eq(matchBracket.roundId, roundId) && eq(matchBracket.matchNumber, matchNumber));
+
+    return matchResult;
+  } catch (error) {
+    console.error("Error fetching matches by round ID:", error);
+    throw error;
+  }
+}
 
 // Update match results (home_result, away_result) for a specific match_id
 export async function updateMatchResults(matchId: number, homeResult: number, awayResult: number) {
@@ -463,6 +475,25 @@ export async function updateMatchResults(matchId: number, homeResult: number, aw
     throw error;
   }
 }
+
+export async function updateNextMatch(matchId: number, participant1Id: string| null, participant2Id: string| null) {
+  try {
+    const updatedMatch = await db
+      .update(matchBracket)
+      .set({
+        participant1Id: participant1Id,  
+        participant2Id: participant2Id,  
+      })
+      .where(eq(matchBracket.matchId, matchId)); 
+
+    return updatedMatch;
+  } catch (error) {
+    console.error("Error updating match results:", error);
+    throw error;
+  }
+}
+
+
 
 // Insert a match game
 export async function insertMatchGame(matchId: number, participant1Score: number, participant2Score: number, gameStatus: string) {
