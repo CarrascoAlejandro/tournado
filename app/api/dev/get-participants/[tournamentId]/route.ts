@@ -15,6 +15,7 @@ export async function GET(
       console.error("Params are missing or invalid:", params);
       return NextResponse.json(
         { error: "The parameter 'tournamentId' is required." },
+
         { status: 400 }
       );
     }
@@ -27,7 +28,8 @@ export async function GET(
 
     if(!tournamentFromCode) {
       console.error("No tournament found for the provided code:", tournamentId);
-      return NextResponse.json({ error: "No tournament found for the provided code." }, { status: 404 });
+      return NextResponse.json({ error: "No tournament was found with the provided code." }, { status: 404 });
+
     }
 
     console.log("Tournament from code:", tournamentFromCode);
@@ -48,6 +50,7 @@ export async function GET(
         tournamentIdFromCode
       );
       return NextResponse.json(
+
         { error: "No participants found for the provided tournament ID." },
         { status: 404 }
       );
@@ -58,7 +61,8 @@ export async function GET(
   } catch (error) {
     console.error("Unhandled error while fetching participants:", error);
     return NextResponse.json(
-      { error: "Internal Server Error, please try again later." },
+      { error: "Internal server error. Please try again later." },
+
       { status: 500 }
     );
   }

@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
       );
     } else {
       return NextResponse.json(
-        { error: "Error registering the participant. Please try again later." },
+        { error: "Error registering participant. Please try again later." },
         { status: 500 }
       );
     }

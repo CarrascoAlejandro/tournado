@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       userMail? userMail: "",
     );
     
-    return NextResponse.json({ message: 'Tournament inserted successfully' });
+    return NextResponse.json({ message: 'Tournament inserted successfully.' });
   } catch (error) {
     console.error('Error inserting tournament:', error);
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
