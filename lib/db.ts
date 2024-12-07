@@ -525,6 +525,42 @@ export async function getMatchGamesByMatchId(matchId: number) {
   }
 }
 
+// Nueva tabla: participant_image
+export const participantImage = pgTable('participant_image', {
+  id: serial('id').primaryKey(),
+  imageId: integer('image_id').notNull(),
+  participantId: integer('participant_id').notNull(),
+});
+
+// Función para insertar un registro en participant_image
+export async function insertParticipantImage(participantId: number, imageId: number) {
+  try {
+    await db.insert(participantImage).values({ participantId, imageId });
+    console.log(`Imagen con ID ${imageId} asociada al participante con ID ${participantId}`);
+  } catch (error) {
+    console.error("Error al insertar participant_image:", error);
+    throw error;
+  }
+}
+
+// Función para obtener un registro de participant_image según participant_id
+export async function getParticipantImageByParticipantId(participantId: number) {
+  try {
+    const participantImageRecord = await db
+      .select()
+      .from(participantImage)
+      .where(eq(participantImage.participantId, participantId))
+      .limit(1);
+
+    // Si no hay registro, devuelve el valor predeterminado de imageId = 1
+    return participantImageRecord.length > 0 ? participantImageRecord[0].imageId : 1;
+  } catch (error) {
+    console.error("Error al obtener participant_image:", error);
+    throw error;
+  }
+}
+
+
 const dbFunctions = {
   insertUser,
   userExists,
@@ -551,7 +587,10 @@ const dbFunctions = {
   insertMatchGame,
   getMatchGamesByMatchId,
   deleteTournamentById,
-  getParticipantCountByTournamentId
+  getParticipantCountByTournamentId,
+  participantImage,
+  insertParticipantImage,
+  getParticipantImageByParticipantId
 };
 
 export default dbFunctions;

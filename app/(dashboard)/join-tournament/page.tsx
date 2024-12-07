@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation'; // Importing useRouter for redirection
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 const JoinTournamentPage: React.FC = () => {
   const [tournamentId, setTournamentId] = useState('');
   const [participantName, setParticipantName] = useState('');
+  const [selectedImage, setSelectedImage] = useState<string>('1'); // Establecer la primera imagen como predeterminada
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false); // Loading state
@@ -19,7 +20,7 @@ const JoinTournamentPage: React.FC = () => {
     setLoading(true);
 
     // Basic validation
-    if (!tournamentId || !participantName) {
+    if (!tournamentId || !participantName || !selectedImage) {
       setError('All fields are required.');
       setLoading(false);
       return;
@@ -33,7 +34,8 @@ const JoinTournamentPage: React.FC = () => {
         },
         body: JSON.stringify({
           tournamentId,
-          participantName
+          participantName,
+          selectedImage // Enviar la imagen seleccionada
         })
       });
 
@@ -44,12 +46,10 @@ const JoinTournamentPage: React.FC = () => {
         setError('');
         setTournamentId('');
         setParticipantName('');
+        setSelectedImage('1'); // Reset to the default image after success
         router.push(`/view-tournament/${tournamentId}`);
       } else {
-        // More detailed error message
-        setError(
-          data.error || 'An error occurred while joining the tournament.'
-        );
+        setError(data.error || 'An error occurred while joining the tournament.');
       }
     } catch (error) {
       console.error('Error in request:', error);
@@ -110,6 +110,43 @@ const JoinTournamentPage: React.FC = () => {
                 required
               />
             </div>
+
+            <div>
+              <label
+                className="block text-md font-semibold text-gray-800 mb-2"
+              >
+                Choose Your Profile Image
+              </label>
+              <div className="flex flex-wrap gap-4">
+                {[...Array(9)].map((_, index) => {
+                  const imageNumber = index + 1;
+                  return (
+                    <div key={imageNumber} className="flex flex-col items-center">
+                      <input
+                        type="radio"
+                        id={`image-${imageNumber}`}
+                        name="profileImage"
+                        value={imageNumber.toString()}
+                        checked={selectedImage === imageNumber.toString()}
+                        onChange={() => setSelectedImage(imageNumber.toString())}
+                        className="hidden"
+                      />
+                      <label
+                        htmlFor={`image-${imageNumber}`}
+                        className={`cursor-pointer ${selectedImage === imageNumber.toString() ? 'border-4 border-purple-500' : ''} transition-all`}
+                      >
+                        <img
+                          src={`/static/profile/${imageNumber}.png`}
+                          alt={`Profile ${imageNumber}`}
+                          className="w-16 h-16 rounded-full border-2 border-transparent hover:border-purple-500 transition-all"
+                        />
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="mt-8 flex justify-center">
               <Button
                 type="submit"
