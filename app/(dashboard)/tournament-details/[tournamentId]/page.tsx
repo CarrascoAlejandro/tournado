@@ -9,6 +9,7 @@ interface Participant {
   participantId: number;
   participantName: string;
   tournamentId: number;
+  participantImage: number; 
 }
 
 const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
@@ -216,12 +217,11 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
               {participants.map((participant) => (
                 <tr key={participant.participantId} className="border-b hover:bg-gray-50">
                   <td className="px-4 py-2 flex items-center gap-4 text-gray-700">
-                    <div
-                      className="h-8 w-8 rounded-full flex items-center justify-center text-2xl font-bold"
-                      style={{ backgroundColor: getRandomColor() }}
-                    >
-                      {participant.participantName.charAt(0).toUpperCase()}
-                    </div>
+                  <img
+                      src={`/static/profile/${participant.participantImage}.png`}
+                      alt={`Profile of ${participant.participantName}`}
+                      className="h-8 w-8 rounded-full"
+                    />
                     <span>{participant.participantName}</span>
                   </td>
                   <td className="px-4 py-2 text-center">
