@@ -29,6 +29,8 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
     } | null;
     opponent1Name?: string;
     opponent2Name?: string;
+    opponent1Img?: number;
+    opponent2Img?: number;
     round_id?: number;
   }
 
@@ -80,14 +82,20 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
     console.log("o1", match.opponent1?.id);
     console.log("o1", match.opponent2?.id);
     const participant1 = await getParticipantsByMatchId(Number(match.opponent1?.id));
+
     console.log('Participantes:', participant1);
     const participant2 = await getParticipantsByMatchId(Number(match.opponent2?.id));
+
     console.log('Participantes:', participant2);
+
 
     setSelectedMatch({
       ...match,
       opponent1Name: participant1?.participantName || "Sin Nombre",
       opponent2Name: participant2?.participantName || "Sin Nombre",
+      opponent1Img: participant1?.img || 1,
+      opponent2Img: participant2?.img || 1,
+
       round_id: match.round_id ?? 0,
     });
   };
@@ -270,49 +278,190 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
       {showInputMask && selectedMatch && (
         <div style={styles.overlay} onClick={() => setShowInputMask(false)}>
           <div
-            style={styles.inputMask}
+            style={{
+              ...styles.inputMask,
+              padding: "20px",
+              maxWidth: "500px",
+              textAlign: "center",
+              borderRadius: "12px",
+              boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
+              background: "white",
+            }}
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-labelledby="input-mask-title"
           >
-            <h2 id="input-mask-title" style={styles.title}>
-              Record result
+            <h2
+              id="input-mask-title"
+              style={{
+                ...styles.title,
+                fontSize: "1.8rem",
+                color: "#4A90E2",
+                fontWeight: "bold",
+                marginBottom: "20px",
+              }}
+            >
+              Record Result
             </h2>
-            <div style={styles.scoreSection}>
-              <div style={styles.team}>
-                <input
-                  ref={opponent1Ref}
-                  type="number"
-                  style={styles.scoreInput}
-                  defaultValue={0}
-                  min="0"
-                  max="99"
-                  aria-label="Puntaje del equipo 1"
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: "30px",
+                margin: "20px 0",
+              }}
+            >
+              {/* Oponente 1 */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "flex-start",
+                  gap: "15px",
+                  flex: 1,
+                }}
+              >
+                <img
+                  src={`/static/profile/${selectedMatch.opponent1Img}.png`}
+                  alt={`Profile of ${selectedMatch.opponent1Name}`}
+                  className="h-20 w-20 rounded-full border-2 border-blue-400 shadow-lg"
                 />
-                <p style={styles.teamName}>{selectedMatch.opponent1Name}</p>
+                <div>
+                  <p
+                    style={{
+                      margin: "0 0 10px",
+                      fontSize: "1rem",
+                      fontWeight: "600",
+                      color: "#333",
+                    }}
+                  >
+                    {selectedMatch.opponent1Name}
+                  </p>
+                  <input
+                    ref={opponent1Ref}
+                    type="number"
+                    style={{
+                      width: "80px",
+                      height: "40px",
+                      textAlign: "center",
+                      padding: "5px",
+                      fontSize: "1.2rem",
+                      border: "2px solid #ddd",
+                      borderRadius: "8px",
+                      boxShadow: "inset 0 2px 5px rgba(0, 0, 0, 0.1)",
+                      transition: "border-color 0.2s",
+                    }}
+                    onFocus={(e) => (e.target.style.borderColor = "#4A90E2")}
+                    onBlur={(e) => (e.target.style.borderColor = "#ddd")}
+                    defaultValue={0}
+                    min="0"
+                    max="99"
+                    aria-label="Score of opponent 1"
+                  />
+                </div>
               </div>
-              <div style={styles.separator}>:</div>
-              <div style={styles.team}>
-                <input
-                  ref={opponent2Ref}
-                  type="number"
-                  style={styles.scoreInput}
-                  defaultValue={0}
-                  min="0"
-                  max="99"
-                  aria-label="Puntaje del equipo 2"
+              {/* Separador */}
+              <div
+                style={{
+                  fontSize: "2rem",
+                  fontWeight: "bold",
+                  color: "#4A90E2",
+                  flexShrink: 0,
+                }}
+              >
+                VS
+              </div>
+              {/* Oponente 2 */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "flex-end",
+                  gap: "15px",
+                  flex: 1,
+                }}
+              >
+                <div>
+                  <p
+                    style={{
+                      margin: "0 0 10px",
+                      fontSize: "1rem",
+                      fontWeight: "600",
+                      color: "#333",
+                      textAlign: "right",
+                    }}
+                  >
+                    {selectedMatch.opponent2Name}
+                  </p>
+                  <input
+                    ref={opponent2Ref}
+                    type="number"
+                    style={{
+                      width: "80px",
+                      height: "40px",
+                      textAlign: "center",
+                      padding: "5px",
+                      fontSize: "1.2rem",
+                      border: "2px solid #ddd",
+                      borderRadius: "8px",
+                      boxShadow: "inset 0 2px 5px rgba(0, 0, 0, 0.1)",
+                      transition: "border-color 0.2s",
+                    }}
+                    onFocus={(e) => (e.target.style.borderColor = "#4A90E2")}
+                    onBlur={(e) => (e.target.style.borderColor = "#ddd")}
+                    defaultValue={0}
+                    min="0"
+                    max="99"
+                    aria-label="Score of opponent 2"
+                  />
+                </div>
+                <img
+                  src={`/static/profile/${selectedMatch.opponent2Img}.png`}
+                  alt={`Profile of ${selectedMatch.opponent2Name}`}
+                  className="h-20 w-20 rounded-full border-2 border-blue-400 shadow-lg"
                 />
-                <p style={styles.teamName}>{selectedMatch.opponent2Name}</p>
               </div>
             </div>
-            <div style={styles.actions}>
+            {/* Botones */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-around",
+                marginTop: "20px",
+                gap: "10px",
+              }}
+            >
               <button
                 onClick={() => setShowInputMask(false)}
-                style={styles.cancelButton}
+                style={{
+                  padding: "10px 20px",
+                  fontSize: "1rem",
+                  background: "#f5f5f5",
+                  color: "#333",
+                  border: "1px solid #ddd",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  transition: "background 0.2s",
+                }}
+
               >
                 Cancel
               </button>
-              <button onClick={() => updateMatch()} style={styles.confirmButton}>
+              <button
+                onClick={() => updateMatch()}
+                style={{
+                  padding: "10px 20px",
+                  fontSize: "1rem",
+                  background: "#4A90E2",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  transition: "background 0.2s",
+                }}
+
+              >
                 Confirm
               </button>
             </div>
@@ -321,6 +470,7 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
       )}
     </div>
   );
+  
 };
 
 export default BracketPage;
