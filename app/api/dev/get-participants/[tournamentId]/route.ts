@@ -12,7 +12,7 @@ export async function GET(
   try {
     console.log("Extracting params...");
     if (!params || !params.tournamentId) {
-      console.error("Params are missing or invalid:", params);
+      console.error("Params are missing or invalid:", params); 
       return NextResponse.json(
         { error: "The parameter 'tournamentId' is required." },
 

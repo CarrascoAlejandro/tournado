@@ -236,7 +236,7 @@ export async function insertTournament(
     userMail
   });
 
-  // Si la validación es exitosa, haces el insert en la base de datos
+  // Si la validación es exitosa, haces el insert en la base de datos 
   
   try {
     await db.insert(tournaments).values({
