@@ -121,6 +121,18 @@ export const participants = pgTable('participant', {
   tournamentId: integer('tournament_id').notNull()
 });
 
+export async function deleteParticipantById(participantId: number) {
+  try {
+    await db
+      .delete(participants)
+      .where(eq(participants.participantId, participantId));
+    console.log(`Participante con ID ${participantId} eliminado exitosamente.`);
+  } catch (error) {
+    console.error("Error al eliminar participante:", error);
+    throw error;
+  }
+}
+
 
 export const tournamentGroups = pgTable('tournament_groups', {//por eliminación simple solo tenemos 1 grupo por torneo
   groupId: serial('group_id').primaryKey(),

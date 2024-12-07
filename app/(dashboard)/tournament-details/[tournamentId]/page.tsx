@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import { Loader } from "@/components/ui/loader";
 import { useRouter } from "next/navigation";
-import { FaTrashAlt } from "react-icons/fa";  // Basurero como icono
+import { FaTrashAlt } from "react-icons/fa"; // Basurero como icono
 
 interface Participant {
   participantId: number;
   participantName: string;
   tournamentId: number;
-  participantImage: number; 
+  participantImage: number;
 }
 
 const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
@@ -17,9 +17,9 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [userEmail, setUserEmail] = useState<string | null>(null); 
-  const [tournamentData, setTournamentData] = useState<any | null>(null); 
-  const router = useRouter(); 
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [tournamentData, setTournamentData] = useState<any | null>(null);
+  const router = useRouter();
 
   // Funciones de fetch
   const fetchParticipants = async () => {
@@ -37,13 +37,38 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
     }
   };
 
+  const deleteParticipant = async (participantId: number) => {
+    try {
+      setLoading(true);
+      const res = await fetch(
+        `/api/dev/get-participants/participant/${participantId}`,
+        {
+          method: "DELETE",
+        }
+      );
+      if (res.ok) {
+        setParticipants((prev) =>
+          prev.filter((participant) => participant.participantId !== participantId)
+        );
+        setError(null);
+      } else {
+        const data = await res.json();
+        setError(data.error || "Error deleting the participant.");
+      }
+    } catch (error) {
+      setError("Error connecting to the server.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchUserEmail = async () => {
     try {
-      const res = await fetch("/api/auth/session"); 
+      const res = await fetch("/api/auth/session");
       const data = await res.json();
 
       if (res.ok && data?.user?.email) {
-        setUserEmail(data.user.email); 
+        setUserEmail(data.user.email);
       } else {
         setUserEmail(null);
         router.push("/login");
@@ -69,7 +94,6 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
     }
   };
 
-  // Efecto de verificación
   useEffect(() => {
     if (userEmail === null) {
       return;
@@ -85,7 +109,6 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
     }
   }, [userEmail, tournamentData]);
 
-  // Lógica de inicio de torneo
   const handleMatchLogic = async () => {
     setLoading(true);
     try {
@@ -217,7 +240,7 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
               {participants.map((participant) => (
                 <tr key={participant.participantId} className="border-b hover:bg-gray-50">
                   <td className="px-4 py-2 flex items-center gap-4 text-gray-700">
-                  <img
+                    <img
                       src={`/static/profile/${participant.participantImage}.png`}
                       alt={`Profile of ${participant.participantName}`}
                       className="h-8 w-8 rounded-full"
@@ -225,7 +248,10 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
                     <span>{participant.participantName}</span>
                   </td>
                   <td className="px-4 py-2 text-center">
-                    <button className="text-red-500 hover:text-red-700 transition-colors">
+                    <button
+                      className="text-red-500 hover:text-red-700 transition-colors"
+                      onClick={() => deleteParticipant(participant.participantId)}
+                    >
                       <FaTrashAlt size={20} />
                     </button>
                   </td>
