@@ -1,6 +1,5 @@
-// app/api/dev/get-participants/[tournamentId]/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { db, participants, getTournamentByCode } from "@/lib/db"; // Conexión y tabla desde db.ts
+import { db, participants, getTournamentByCode, getParticipantImageByParticipantId } from "@/lib/db"; // Importar la función
 import { eq } from "drizzle-orm";
 
 export async function GET(
@@ -12,10 +11,9 @@ export async function GET(
   try {
     console.log("Extracting params...");
     if (!params || !params.tournamentId) {
-      console.error("Params are missing or invalid:", params); 
+      console.error("Params are missing or invalid:", params);
       return NextResponse.json(
         { error: "The parameter 'tournamentId' is required." },
-
         { status: 400 }
       );
     }
@@ -26,43 +24,64 @@ export async function GET(
     // Obtener el ID del torneo desde el código
     const tournamentFromCode = await getTournamentByCode(tournamentId);
 
-    if(!tournamentFromCode) {
-      console.error("No tournament found for the provided code:", tournamentId);
-      return NextResponse.json({ error: "No tournament was found with the provided code." }, { status: 404 });
-
+    if (!tournamentFromCode) {
+      console.error(
+        "No tournament found for the provided code:",
+        tournamentId
+      );
+      return NextResponse.json(
+        { error: "No tournament was found with the provided code." },
+        { status: 404 }
+      );
     }
 
     console.log("Tournament from code:", tournamentFromCode);
 
     const tournamentIdFromCode = tournamentFromCode.tournamentId;
 
-    console.log("Querying database for participants with tournament ID:", tournamentIdFromCode);
-    const tournament = await db
+    console.log(
+      "Querying database for participants with tournament ID:",
+      tournamentIdFromCode
+    );
+    const participantsList = await db
       .select()
       .from(participants)
       .where(eq(participants.tournamentId, tournamentIdFromCode));
 
-    console.log("Database query result:", tournament);
+    console.log("Database query result:", participantsList);
 
-    if (tournament.length === 0) {
+    if (participantsList.length === 0) {
       console.warn(
         "No participants found for the provided tournament ID:",
         tournamentIdFromCode
       );
       return NextResponse.json(
-
         { error: "No participants found for the provided tournament ID." },
         { status: 404 }
       );
     }
 
-    console.log("Returning participants:", tournament);
-    return NextResponse.json({ participants: tournament });
+    // Agregar `participant_image` para cada participante
+    const participantsWithImages = await Promise.all(
+      participantsList.map(async (participant) => {
+        const participantImageId = await getParticipantImageByParticipantId(
+          participant.participantId
+        );
+
+        return {
+          ...participant,
+          participantImage: participantImageId, // Añadir la imagen al objeto
+        };
+      })
+    );
+
+    console.log("Returning participants with images:", participantsWithImages);
+
+    return NextResponse.json({ participants: participantsWithImages });
   } catch (error) {
     console.error("Unhandled error while fetching participants:", error);
     return NextResponse.json(
       { error: "Internal server error. Please try again later." },
-
       { status: 500 }
     );
   }
