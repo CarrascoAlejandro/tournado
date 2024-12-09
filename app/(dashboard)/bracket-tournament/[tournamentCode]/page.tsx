@@ -136,7 +136,7 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
         }
         console.log("participantId", participantId);
 
-        // Trigger the PATCH request after updating the match
+        
         await fetch(`/api/dev/tournament/match`, {
           method: 'PATCH',
           headers: {
@@ -166,8 +166,8 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
             console.error("Error al realizar la solicitud PATCH:", error);
         });
 
-        // Refetch and render brackets after updating the match
-        // fetchAndRenderBrackets();
+        
+        
       }
     } catch (error) {
       console.error("Failed to update match:", error);

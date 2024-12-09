@@ -23,7 +23,7 @@ import { Loader } from '@/components/ui/loader';
 
 
 const TournamentsPage: React.FC = () => {
-  const { data: session, status } = useSession(); // Obtén la sesión y su estado
+  const { data: session, status } = useSession(); 
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
@@ -40,26 +40,30 @@ const TournamentsPage: React.FC = () => {
     nMaxParticipants: 2,
     tags: ''
   });
+
   const fetchTournaments = async () => {
-    if (session?.user?.id) { // Comprueba si hay una sesión válida
+    if (session?.user?.id) { 
       try {
         const response = await fetch(`/api/dev/tournament?userEmail=${session.user.email}`);
-        const text = await response.text(); // Obtén la respuesta como texto
-        console.log('Response:', text); // Verifica la respuesta en la consola
-
+        const text = await response.text(); 
+        console.log('Response:', text); 
+  
         const data = JSON.parse(text);
         console.log('Tournaments:', data);
-        setTournaments(data);
+  
+        const sortedTournaments = data.sort((a: Tournament, b: Tournament) => b.tournamentId - a.tournamentId);
+        setTournaments(sortedTournaments);
       } catch (error) {
         console.error('Error fetching tournaments:', error);
       }
     }
   };
+  
 
   useEffect(() => {
 
     fetchTournaments();
-  }, [session]); // Dependencia de la sesión
+  }, [session]); 
 
   const handleSubmitTournament = async () => {
     try {
@@ -77,16 +81,16 @@ const TournamentsPage: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData), // Enviamos los datos del formulario
+        body: JSON.stringify(formData), 
       });
 
       if (response.ok) {
         const data = await response.json();
         console.log('Torneo creado exitosamente:', data);
-        // Aquí puedes manejar el cierre del modal o mostrar un mensaje de éxito
+        
         await fetchTournaments();
         setIsCreateModalOpen(false);
-        setShowCreateSuccessDialog(true); // Mostrar el diálogo de éxito
+        setShowCreateSuccessDialog(true); 
         setFormData({
           tournamentCode: '',
           tournamentName: '',
@@ -117,7 +121,7 @@ const TournamentsPage: React.FC = () => {
   if (status === 'loading') return (
     <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }} >
       {Loader(250, 250)} 
-    </div> // Loading indicator // FIXME: make size depend on screen size;
+    </div> 
   )
 
   const openCreateModal = () => {
@@ -142,14 +146,14 @@ const TournamentsPage: React.FC = () => {
     const selectedDate = new Date(date);
     const today = new Date();
   
-    // Agregamos 4 horas y 1 minuto al selectedDate
+    
     selectedDate.setHours(selectedDate.getHours() + 4);
     selectedDate.setMinutes(selectedDate.getMinutes() + 1);
   
-    // Normalizamos "today" al inicio del día (00:00:00)
+    
     today.setHours(0, 0, 0, 0);
   
-    const isValid = selectedDate >= today; // Comparamos solo los días normalizados en relación con today
+    const isValid = selectedDate >= today; 
     console.log("Validating date:", {
       selectedDate,
       today,
@@ -241,7 +245,7 @@ const TournamentsPage: React.FC = () => {
       );
     }
   
-    return null; // Si no hay diálogos activos, no renderiza nada
+    return null; 
   };
   
   
@@ -275,13 +279,13 @@ const TournamentsPage: React.FC = () => {
   
           {/* {session && ( */}
           {session && tournaments.length === 0 ? (
-            // Mensaje cuando no hay torneos creados
+            
             <div className="text-center text-gray-500 py-4">
               <p>You don't have any tournaments created yet.</p>
               <p>Click on "Create Tournament" to get started!</p>
             </div>
           ) : (
-            // Tabla de torneos si hay datos
+            
             <Table className="min-w-full border-collapse bg-white rounded-lg shadow-md">
               <TableHeader>
                 <TableRow className="text-gray-700 bg-indigo-100">
@@ -313,7 +317,7 @@ const TournamentsPage: React.FC = () => {
                         <Button 
                           className="bg-indigo-600 text-white text-xs px-4 py-2 rounded-lg hover:bg-indigo-700"
                           onClick={(e) => {
-                            e.stopPropagation(); // Prevent triggering row click
+                            e.stopPropagation(); 
                             handleOpenTournamentDetails(tournament.tournamentCode);
                           }}
                         >
@@ -377,7 +381,7 @@ const TournamentsPage: React.FC = () => {
                 name="startDate"
                 value={formData.startDate}
                 onChange={handleChange}
-                min={new Date().toISOString().split("T")[0]} // Fecha mínima hoy
+                min={new Date().toISOString().split("T")[0]} 
                 className="rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 w-full"
                 required
               />
@@ -395,7 +399,7 @@ const TournamentsPage: React.FC = () => {
                 name="endDate"
                 value={formData.endDate}
                 onChange={handleChange}
-                min={formData.startDate || new Date().toISOString().split("T")[0]} // Mínimo es hoy o la fecha de inicio
+                min={formData.startDate || new Date().toISOString().split("T")[0]} 
                 className="rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 w-full"
                 required
               />
@@ -413,8 +417,8 @@ const TournamentsPage: React.FC = () => {
                   placeholder="Max participants"
                   value={formData.nMaxParticipants}
                   onChange={handleChange}
-                  min="2" // Asegurar el mínimo permitido en el navegador
-                  max="32" // Asegurar el máximo permitido en el navegador
+                  min="2" 
+                  max="32" 
                   className="rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 w-full"
                   required
                 />

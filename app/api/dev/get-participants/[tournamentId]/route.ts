@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, participants, getTournamentByCode, getParticipantImageByParticipantId } from "@/lib/db"; // Importar la función
+import { db, participants, getTournamentByCode, getParticipantImageByParticipantId } from "@/lib/db"; 
 import { eq } from "drizzle-orm";
 
 export async function GET(
@@ -21,7 +21,7 @@ export async function GET(
     const { tournamentId } = params;
     console.log("Tournament ID received:", tournamentId);
 
-    // Obtener el ID del torneo desde el código
+    
     const tournamentFromCode = await getTournamentByCode(tournamentId);
 
     if (!tournamentFromCode) {
@@ -61,7 +61,7 @@ export async function GET(
       );
     }
 
-    // Agregar `participant_image` para cada participante
+    
     const participantsWithImages = await Promise.all(
       participantsList.map(async (participant) => {
         const participantImageId = await getParticipantImageByParticipantId(
@@ -70,7 +70,7 @@ export async function GET(
 
         return {
           ...participant,
-          participantImage: participantImageId, // Añadir la imagen al objeto
+          participantImage: participantImageId, 
         };
       })
     );
