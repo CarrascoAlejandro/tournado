@@ -24,7 +24,7 @@ import { Loader } from '@/components/ui/loader';
 import { Search } from 'lucide-react';
 
 const TournamentsPage: React.FC = () => {
-  const { data: session, status } = useSession(); // Obtén la sesión y su estado
+  const { data: session, status } = useSession(); 
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
@@ -100,7 +100,7 @@ const TournamentsPage: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData), // Enviamos los datos del formulario
+        body: JSON.stringify(formData), 
       });
 
       if (response.ok) {
@@ -109,7 +109,7 @@ const TournamentsPage: React.FC = () => {
         // Aquí puedes manejar el cierre del modal o mostrar un mensaje de éxito
         await fetchData(); // Actualizar la lista de torneos
         setIsCreateModalOpen(false);
-        setShowCreateSuccessDialog(true); // Mostrar el diálogo de éxito
+        setShowCreateSuccessDialog(true); 
         setFormData({
           tournamentCode: '',
           tournamentName: '',
@@ -141,7 +141,7 @@ const TournamentsPage: React.FC = () => {
   if (status === 'loading') return (
     <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }} >
       {Loader(250, 250)} 
-    </div> // Loading indicator // FIXME: make size depend on screen size;
+    </div> 
   )
 
   const openCreateModal = () => {
@@ -168,14 +168,14 @@ const TournamentsPage: React.FC = () => {
     const selectedDate = new Date(date);
     const today = new Date();
   
-    // Agregamos 4 horas y 1 minuto al selectedDate
+    
     selectedDate.setHours(selectedDate.getHours() + 4);
     selectedDate.setMinutes(selectedDate.getMinutes() + 1);
   
-    // Normalizamos "today" al inicio del día (00:00:00)
+    
     today.setHours(0, 0, 0, 0);
   
-    const isValid = selectedDate >= today; // Comparamos solo los días normalizados en relación con today
+    const isValid = selectedDate >= today; 
     console.log("Validating date:", {
       selectedDate,
       today,
@@ -468,7 +468,7 @@ const TournamentsPage: React.FC = () => {
                 name="startDate"
                 value={formData.startDate}
                 onChange={handleChange}
-                min={new Date().toISOString().split("T")[0]} // Fecha mínima hoy
+                min={new Date().toISOString().split("T")[0]} 
                 className="rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 w-full"
                 required
               />
@@ -486,7 +486,7 @@ const TournamentsPage: React.FC = () => {
                 name="endDate"
                 value={formData.endDate}
                 onChange={handleChange}
-                min={formData.startDate || new Date().toISOString().split("T")[0]} // Mínimo es hoy o la fecha de inicio
+                min={formData.startDate || new Date().toISOString().split("T")[0]} 
                 className="rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 w-full"
                 required
               />
@@ -504,8 +504,8 @@ const TournamentsPage: React.FC = () => {
                   placeholder="Max participants"
                   value={formData.nMaxParticipants}
                   onChange={handleChange}
-                  min="2" // Asegurar el mínimo permitido en el navegador
-                  max="32" // Asegurar el máximo permitido en el navegador
+                  min="2" 
+                  max="32" 
                   className="rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 w-full"
                   required
                 />

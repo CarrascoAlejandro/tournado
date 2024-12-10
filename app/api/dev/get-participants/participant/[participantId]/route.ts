@@ -7,22 +7,22 @@ export async function GET(request: NextRequest,
   try {
     const { participantId } = params;
 
-    // Obtener datos del participante
+    
     const participant = await getParticipantById(participantId);
     if (!participant) {
       return NextResponse.json({ message: 'Participant not found' }, { status: 404 });
     }
 
-    // Obtener imagen del participante
+    
     const img = await getParticipantImageByParticipantId(participant.participantId);
 
-    // Agregar la imagen al objeto del participante
+    
     const participantWithImage = {
       ...participant,
-      img, // Agregar el atributo de imagen
+      img, 
     };
 
-    // Responder con los datos obtenidos
+    
     return NextResponse.json(participantWithImage);
   } catch (error) {
     console.error('Error fetching participant data:', error);
@@ -35,16 +35,16 @@ export async function DELETE(request: NextRequest,
 try {
   const { participantId } = params;
 
-  // Verificar si el participante existe antes de eliminar
+  
   const participant = await getParticipantById(participantId);
   if (!participant) {
     return NextResponse.json({ message: 'Participant not found' }, { status: 404 });
   }
 
-  // Eliminar al participante por ID
+  
   await deleteParticipantById(participantId);
 
-  // Responder confirmando la eliminación
+  
   return NextResponse.json({ message: `Participant with ID ${participantId} successfully deleted` });
 } catch (error) {
   console.error('Error deleting participant:', error);

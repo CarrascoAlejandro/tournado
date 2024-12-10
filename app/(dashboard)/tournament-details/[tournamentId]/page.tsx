@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Loader } from "@/components/ui/loader";
 import { useRouter } from "next/navigation";
-import { FaTrashAlt } from "react-icons/fa"; // Basurero como icono
+import { FaTrashAlt } from "react-icons/fa"; 
 
 interface Participant {
   participantId: number;
@@ -21,7 +21,7 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
   const [tournamentData, setTournamentData] = useState<any | null>(null);
   const router = useRouter();
 
-  // Funciones de fetch
+  
   const fetchParticipants = async () => {
     try {
       const res = await fetch(`/api/dev/get-participants/${tournamentId}`);

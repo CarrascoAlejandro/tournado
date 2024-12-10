@@ -6,7 +6,7 @@ interface Participant {
   participantId: number;
   participantName: string;
   tournamentId: number;
-  participantImage: number; // Aseguramos que incluya este campo
+  participantImage: number; 
 }
 
 const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
@@ -24,7 +24,7 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
 
       if (res.ok) {
         setParticipants(data.participants);
-        setError(null); // Clear any previous errors
+        setError(null); 
       } else {
         setError(data.error || "There was an error fetching the participants.");
       }
