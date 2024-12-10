@@ -33,7 +33,7 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
 
   interface Participant {
     id: number;
-    participantName: string;
+    participantImage: number;
   }
   interface Match {
     id: string;
@@ -65,6 +65,10 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
       setTournamentId(Number(tournamentData.stage[0].id));
 
       if (window.bracketsViewer) {
+        window.bracketsViewer.setParticipantImages(tournamentData.participantImages.map((participant: Participant) => ({
+            participantId: participant.id,
+            imageUrl: `/static/profile/${participant.participantImage}.png`,
+        })));
         window.bracketsViewer.render({
           stages: tournamentData.stage,
           matches: tournamentData.match,
