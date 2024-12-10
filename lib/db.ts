@@ -268,6 +268,24 @@ export async function insertTournament(
   }
 }
 
+export async function getTagsByUserMail(userMail: string): Promise<string[]> {
+  try {
+    const tags = await db
+      .select({ tags: tournaments.tags })
+      .from(tournaments)
+      .where(eq(tournaments.userMail, userMail));
+
+    const uniqueTags = Array.from(
+      new Set(tags.flatMap(tagEntry => tagEntry.tags.split(',')))
+    );
+
+    return uniqueTags;
+  } catch (error) {
+    console.error("Error fetching tags by user mail:", error);
+    throw error;
+  }
+}
+
 export async function getTournamentByCode(tournamentCode: string) {
   try {
     const tournament = await db
