@@ -221,14 +221,24 @@ const TournamentsPage: React.FC = () => {
     });
   };
 
-  const handleOpenTournamentDetails = (tournamentCode: string) => {
+  const handleOpenTournamentDetails = (tournamentCode: string, status: "Soon" | "In Progress" | "Finished") => {
     if (!tournamentCode) {
       console.error('Tournament code is missing');
       return;
     }
-    const tournamentUrl = `/tournament-details/${tournamentCode}`;
+  
+    let tournamentUrl;
+    if (status === 'In Progress' || status === 'Finished') {
+      tournamentUrl = `/bracket-tournament/${tournamentCode}`;
+    } else if (status === 'Soon') {
+      tournamentUrl = `/tournament-details/${tournamentCode}`;
+    } else {
+      console.error('Unknown tournament status:', status);
+      return;
+    }
+  
     window.open(tournamentUrl, '_blank');
-  };  
+  };
 
   const handleStatusChange = (status: string) => {
     setError("");
@@ -328,7 +338,7 @@ const TournamentsPage: React.FC = () => {
                   className="bg-indigo-600 text-white text-xs px-4 py-2 rounded-lg hover:bg-indigo-700"
                   onClick={(e) => {
                     e.stopPropagation(); // Prevent triggering row click
-                    handleOpenTournamentDetails(tournament.tournamentCode);
+                    handleOpenTournamentDetails(tournament.tournamentCode, tournament.status as "Soon" | "In Progress" | "Finished");
                   }}
                 >
                 {tournament.status === "Soon" ? "Start & View" : "View"}

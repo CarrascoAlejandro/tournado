@@ -133,6 +133,23 @@ export async function deleteParticipantById(participantId: number) {
   }
 }
 
+export async function updateTournamentStatusByIdAndUserMail(tournamentId: number, userMail: string, newStatus: "Soon" | "In Progress" | "Finished") {
+  try {
+    const result = await db
+      .update(tournaments)
+      .set({ status: newStatus })
+      .where(and(eq(tournaments.tournamentId, tournamentId), eq(tournaments.userMail, userMail)));
+
+    if (result.rowCount === 0) {
+      console.log(`No se encontró un torneo con ID ${tournamentId} para el usuario con correo ${userMail}`);
+    } else {
+      console.log(`Estado del torneo con ID ${tournamentId} actualizado a ${newStatus} para el usuario con correo ${userMail}`);
+    }
+  } catch (error) {
+    console.error("Error al actualizar el estado del torneo:", error);
+    throw error;
+  }
+}
 
 export const tournamentGroups = pgTable('tournament_groups', {//por eliminación simple solo tenemos 1 grupo por torneo
   groupId: serial('group_id').primaryKey(),
