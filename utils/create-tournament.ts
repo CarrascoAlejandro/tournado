@@ -50,11 +50,13 @@ export const createTournamentBracket = async (tournamentData: {
     return array;
   };
 
-  const ensureNoExcessiveConsecutiveByes = (participants: Array<any>, maxByes = 2) => {
+  const ensureNoExcessiveConsecutiveByes = (participants: Array<any>, maxByes = 1) => {
     let shuffledParticipants = [...participants];
     while (hasExcessiveConsecutiveByes(shuffledParticipants, maxByes)) {
+      console.log("Participants list: ", shuffledParticipants);
       shuffledParticipants = shuffleArray(shuffledParticipants);
     }
+    console.log("Final participants list: ", shuffledParticipants);
     return shuffledParticipants;
   };
 
