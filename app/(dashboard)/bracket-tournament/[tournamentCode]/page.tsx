@@ -62,6 +62,7 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
           matchGames: tournamentData.match_game,
           participants: tournamentData.participant,
         });
+
         
         window.bracketsViewer.onMatchClicked = async (match: any) => {
           console.log("match", match);
@@ -414,6 +415,7 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
 
     <div className="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-6" >
       {renderDialog()}
+       
       {loading && Loader(250, 250)}
 
       {!loading && error && (
@@ -430,9 +432,12 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
           </div>
         </div>
       )}
-
+      
       <div style={{ padding: "20px" }}>
+      
         <div className="brackets-viewer" />
+        {/* {showFinalWinnerDialog && <ConfettiAnimation show={true} />} */}
+        
       </div>
       {showInputMask && selectedMatch && (
         
@@ -627,7 +632,9 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
               </button>
             </div>
           </div>
+          
         </div>
+        
       )}
     </div>
   );
