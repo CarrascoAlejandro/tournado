@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import { Loader } from "@/components/ui/loader";
-import ConfettiAnimation   from "@/components/ui/ConfettiAnimation";
+import ConfettiAnimation from "@/components/ui/ConfettiAnimation";
 import { set } from "zod";
+import { useSession } from 'next-auth/react';
 import Dialog from '@/components/ui/alert-dialog';
 
 const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
@@ -21,7 +22,14 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
   const [finalWinner, setFinalWinner] = useState<number | null>(null);
   const [tournamentData, setTournamentData] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isEditable, setIsEditable] = useState(false);
+  const isEditableRef = useRef(isEditable);
+  const { data: session, status } = useSession(); 
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
+  useEffect(() => {
+    isEditableRef.current = isEditable;
+  }, [isEditable]);
 
   interface Participant {
     id: number;
@@ -41,6 +49,7 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
     opponent2Img?: number;
     round_id?: number;
   }
+  
 
   const fetchAndRenderBrackets = async () => {
     try {
@@ -65,6 +74,7 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
 
         
         window.bracketsViewer.onMatchClicked = async (match: any) => {
+          if (!isEditableRef.current) return;
           console.log("match", match);
           console.log("match con round id", Number(match.round_id));
           setRoundId(Number(match.round_id));
@@ -157,6 +167,7 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
   };
 
   const updateMatch = async () => {
+    if (!isEditableRef.current) return;
     if (!selectedMatch || !opponent1Ref.current || !opponent2Ref.current) return;
 
     const score1 = Number(opponent1Ref.current.value);
@@ -267,10 +278,45 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
     }
   };
 
+
   useEffect(() => {
-    fetchAndRenderBrackets();
-    getTournamentData();
+    const initialize = async () => {
+      await getTournamentData(); // Fetch tournament details
+      await fetchAndRenderBrackets(); // Render brackets
+      setLoading(false); // Stop loading spinner
+    };
+    initialize();
   }, [tournamentCode]);
+  
+  const checkEditPermissions = async () => {
+    console.log("Checking edit permissions...");
+    console.log("Session:", session);
+    console.log("Tournament data:", tournamentData);
+  
+    if (!session) {
+      console.log("Session not available.");
+      setIsEditable(false);
+      return;
+    }
+  
+    if (!tournamentData) {
+      console.log("Tournament data not loaded yet.");
+      setIsEditable(false);
+      return;
+    }
+  
+    const userMail = session.user?.email;
+    const isOwner = tournamentData.userMail === userMail;
+    const isFinished = tournamentData.status === "Finished";
+    setIsEditable(isOwner && !isFinished);
+  };
+
+  useEffect(() => {
+    if (status === "authenticated" && session && tournamentData) {
+      checkEditPermissions();
+    }
+  }, [session, tournamentData, status]);
+  
 
   const styles = {
     overlay: {
@@ -429,6 +475,64 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
             <p><strong>End Date:</strong> {new Date(tournamentData?.endDate).toLocaleDateString()}</p>
             <p><strong>Status:</strong> {tournamentData?.status}</p>
             <p><strong>Tags:</strong> {tournamentData?.tags}</p>
+            {isEditableRef.current && (
+            <button
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-700"
+              onClick={() => setShowConfirmModal(true)}
+            >
+              Finish the tournament
+            </button>
+          )}
+          {showConfirmModal && (
+            <Dialog
+              visible={showConfirmModal}
+              onHide={() => setShowConfirmModal(false)}
+              header="Confirm Finish Tournament"
+              footer={
+                <>
+                  <button
+                    className="px-4 py-2 bg-gray-500 text-white rounded-lg shadow-md hover:bg-gray-700"
+                    onClick={() => setShowConfirmModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-700"
+                    onClick={async () => {
+                      try {
+                        const patchRes = await fetch('/api/dev/tournament/status', {
+                          method: "PATCH",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({
+                            tournamentId: tournamentData.tournamentId,
+                            newStatus: "Finished",
+                          }),
+                        });
+
+                        if (!patchRes.ok) {
+                          const errorData = await patchRes.json();
+                          throw new Error(errorData.error || "Error updating tournament status.");
+                        }
+
+                        const responseData = await patchRes.json();
+                        console.log("Tournament status updated:", responseData);
+                        // Recargar la página después de actualizar el estado del torneo
+                        window.location.reload();
+                      } catch (error) {
+                        console.error("Failed to update tournament status:", error);
+                      }
+                    }}
+                  >
+                    Confirm
+                  </button>
+                </>
+              }
+            >
+              <p>Are you sure you want to finish the tournament? Once finished, you will not be able to edit it later.</p>
+            </Dialog>
+          )}
           </div>
         </div>
       )}

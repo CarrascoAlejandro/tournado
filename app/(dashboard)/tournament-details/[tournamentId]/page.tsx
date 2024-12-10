@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Loader } from "@/components/ui/loader";
 import { useRouter } from "next/navigation";
 import { FaTrashAlt } from "react-icons/fa"; 
+import { TagList } from '@/components/ui/tag-list';
 
 interface Participant {
   participantId: number;
@@ -83,7 +84,7 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
     try {
       const res = await fetch(`/api/dev/tournament-details/${tournamentId}`);
       const data = await res.json();
-
+      console.log(data);
       if (res.ok) {
         setTournamentData(data.tournament);
       } else {
@@ -121,6 +122,24 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
         window.open(tournamentUrl, "_blank");
         setError(null);
       } else if (fetchData.error === "Tournament don't started yet") {
+        const patchRes = await fetch(`/api/dev/tournament/status`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            tournamentId: tournamentData.tournamentId,
+            newStatus: "In Progress",
+          }),
+        });
+        
+        const patchData = await patchRes.json();    
+        if (!patchRes.ok) {
+          setError(patchData.message || "Error updating tournament status.");
+          setLoading(false);
+          return;
+        }
+        
         const startRes = await fetch(`/api/dev/tournament/${tournamentId}/start`, {
           method: "POST",
         });
