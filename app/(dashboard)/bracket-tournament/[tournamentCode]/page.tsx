@@ -14,6 +14,8 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
   const [opponentPassedId, setOpponentPassedId] = useState<number | null>(null);
   const [roundId, setRoundId] = useState<number | null>(null);
   const [matchId, setMatchId] = useState<number | null>(null);
+  const [tournamentData, setTournamentData] = useState<any | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   interface Participant {
     id: number;
@@ -39,6 +41,7 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
       const res = await fetch(`/api/dev/tournament/${tournamentCode}/brackets`);
       if (!res.ok) {
         const errorData = await res.json();
+        setError(errorData);
         throw new Error(errorData.error || "Error fetching tournament data.");
       }
 
@@ -69,7 +72,7 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
           setShowInputMask(true);
         };
         setLoading(false);
-        
+
       } else {
         console.error("bracketsViewer is not defined on the window object.");
       }
@@ -149,7 +152,7 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
             participantId: participantId ?? 0,
           }),
         })
-        .then(response => {
+          .then(response => {
             if (!response.ok) {
               return response.json().then(errorData => {
                 console.error("Error en la solicitud PATCH:", errorData);
@@ -164,7 +167,7 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
           })
           .catch(error => {
             console.error("Error al realizar la solicitud PATCH:", error);
-        });
+          });
 
         
         
@@ -190,8 +193,25 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
     }
   };
 
+  const getTournamentData = async () => {
+    try {
+      const res = await fetch(`/api/dev/tournament-details/${tournamentCode}`);
+      const data = await res.json();
+
+      if (res.ok) {
+        console.log("KKT Tournament data:", data.tournament);
+        setTournamentData(data.tournament);
+      } else {
+        setError(data.error || "There was an error fetching tournament data.");
+      }
+    } catch (error) {
+      setError("Error connecting to the server.");
+    }
+  };
+
   useEffect(() => {
     fetchAndRenderBrackets();
+    getTournamentData();
   }, [tournamentCode]);
 
   const styles = {
@@ -273,8 +293,28 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
   };
 
   return (
-    <div>
-      <div className="brackets-viewer" />
+    <div className="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-6" >
+
+      {loading && Loader(250, 250)}
+
+      {!loading && error && (
+        <h1 className="text-3xl font-semibold text-center text-red-500">{error}</h1>
+      )}
+
+      {!loading && !error && (
+        <div className="mb-6 w-full max-w-4xl p-4 bg-indigo-50 rounded-lg shadow-md">
+          <div className="text-lg font-semibold text-gray-700">
+            <p><strong>Start Date:</strong> {new Date(tournamentData?.startDate).toLocaleDateString()}</p>
+            <p><strong>End Date:</strong> {new Date(tournamentData?.endDate).toLocaleDateString()}</p>
+            <p><strong>Status:</strong> {tournamentData?.status}</p>
+            <p><strong>Tags:</strong> {tournamentData?.tags}</p>
+          </div>
+        </div>
+      )}
+
+      <div style={{ padding: "20px" }}>
+        <div className="brackets-viewer" />
+      </div>
       {showInputMask && selectedMatch && (
         <div style={styles.overlay} onClick={() => setShowInputMask(false)}>
           <div
