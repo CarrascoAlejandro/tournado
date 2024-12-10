@@ -19,9 +19,9 @@ import { Tournament } from '@/components/ui/tournament-modal';
 import { TagInput } from '@/components/ui/tag-input';
 import { TagList } from '@/components/ui/tag-list';
 import Dialog from '@/components/ui/alert-dialog';
+import { SuggestionDropdown } from '@/components/ui/suggestion-dropdown';
 import { Loader } from '@/components/ui/loader';
 import { Search } from 'lucide-react';
-import { Spinner } from '@/components/icons';
 
 const TournamentsPage: React.FC = () => {
   const { data: session, status } = useSession(); // Obtén la sesión y su estado
@@ -34,6 +34,7 @@ const TournamentsPage: React.FC = () => {
   const [showCreateSuccessDialog, setShowCreateSuccessDialog] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("Soon");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [formData, setFormData] = useState({
     tournamentCode:'',
@@ -260,10 +261,21 @@ const TournamentsPage: React.FC = () => {
     return null; // Si no hay diálogos activos, no renderiza nada
   };
 
-  const filteredTournaments = tournaments.filter(
-    (tournament) => tournament.status === activeTab
-  );
+  const filteredTournaments = tournaments.filter((tournament) => {
+    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+    const matchesName = tournament.tournamentName.toLowerCase().includes(lowerCaseSearchTerm);
+    const tagsArray = typeof tournament.tags === "string"
+      ? tournament.tags.split(",").map(tag => tag.trim().toLowerCase())
+      : (tournament.tags as string[]).map((tag: string) => tag.toLowerCase());
+    const matchesTags = tagsArray.some((tag: string) => tag.includes(lowerCaseSearchTerm));
+    const matchesStatus = tournament.status === activeTab;
+    return (matchesName || matchesTags) && matchesStatus;
+  });
 
+  const handleSelect = (suggestions: string) => {
+    setSearchTerm(suggestions);
+  };
+  
   const renderTable = (tournaments: Tournament[], openModal: Function, handleOpenTournamentDetails: Function) => {
     if (!Array.isArray(tournaments) || tournaments.length === 0) {
       return (
@@ -327,7 +339,12 @@ const TournamentsPage: React.FC = () => {
     );
   };
 
-  
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && searchTerm) {
+      handleSelect(searchTerm);
+    }
+  };
+
   return (
     <div>
       {/* Render dynamic dialogs */}
@@ -345,12 +362,33 @@ const TournamentsPage: React.FC = () => {
         <CardContent>
           <div className="flex justify-start items-center mb-6">
             {session ? (
-              <Button
-                onClick={openCreateModal}
-                className="bg-indigo-600 text-white hover:bg-indigo-700 transition duration-300"
-              >
-                Create Tournament
-              </Button>
+              <>
+                <Button
+                  onClick={openCreateModal}
+                  className="bg-indigo-600 text-white hover:bg-indigo-700 transition duration-300"
+                >
+                  Create Tournament
+                </Button>
+                <div className="relative w-1/2 ml-4">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search className="text-gray-500" />
+                  </div>
+                  <Input
+                    type="text"
+                    placeholder="Search by name or tags"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={handleInputKeyDown}
+                    className="pl-10 rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 w-full"
+                  />
+                   <SuggestionDropdown
+                    input={searchTerm}
+                    suggestions={suggestions}
+                    onSelect={handleSelect}
+                    onKeyDown={handleInputKeyDown} // Pass keydown handler
+                  />
+                </div>
+              </>
             ) : (
               <div className="text-center w-full">
                 <p className="mb-4 text-gray-600">
