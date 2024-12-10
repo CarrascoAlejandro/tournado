@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import PeopleIcon from '@material-ui/icons/People';
 import {
   Card,
   CardContent,
@@ -19,6 +20,8 @@ import { TagInput } from '@/components/ui/tag-input';
 import { TagList } from '@/components/ui/tag-list';
 import Dialog from '@/components/ui/alert-dialog';
 import { Loader } from '@/components/ui/loader';
+import { Search } from 'lucide-react';
+import { Spinner } from '@/components/icons';
 
 const TournamentsPage: React.FC = () => {
   const { data: session, status } = useSession(); // Obtén la sesión y su estado
@@ -30,7 +33,7 @@ const TournamentsPage: React.FC = () => {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showCreateSuccessDialog, setShowCreateSuccessDialog] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<'Soon' | 'In Progress' | 'Finished'>('Soon'); // Default tab
+  const [activeTab, setActiveTab] = useState("Soon");
 
   const [formData, setFormData] = useState({
     tournamentCode:'',
@@ -215,20 +218,6 @@ const TournamentsPage: React.FC = () => {
       return updatedFormData;
     });
   };
-  
-  
-
-  
-  
-  
-
-
-
-
-  
-  
-  
-
 
   const handleOpenTournamentDetails = (tournamentCode: string) => {
     if (!tournamentCode) {
@@ -270,9 +259,11 @@ const TournamentsPage: React.FC = () => {
   
     return null; // Si no hay diálogos activos, no renderiza nada
   };
+
   const filteredTournaments = tournaments.filter(
     (tournament) => tournament.status === activeTab
   );
+
   const renderTable = (tournaments: Tournament[], openModal: Function, handleOpenTournamentDetails: Function) => {
     if (!Array.isArray(tournaments) || tournaments.length === 0) {
       return (
@@ -282,7 +273,7 @@ const TournamentsPage: React.FC = () => {
         </div>
       );
     }
-  
+
     return (
       <Table className="min-w-full border-collapse bg-white rounded-lg shadow-md">
         <TableHeader>
@@ -305,7 +296,10 @@ const TournamentsPage: React.FC = () => {
               <TableCell>{tournament.tournamentCode}</TableCell>
               <TableCell>{tournament.tournamentName}</TableCell>
               <TableCell>{tournament.status}</TableCell>
-              <TableCell>{tournament.nMaxParticipants}</TableCell>
+              <TableCell>
+                <PeopleIcon className="mr-2" />
+                {tournament.nMaxParticipants}
+              </TableCell>
               <TableCell>
                 <TagList
                   tags={
@@ -323,7 +317,7 @@ const TournamentsPage: React.FC = () => {
                     handleOpenTournamentDetails(tournament.tournamentCode);
                   }}
                 >
-                  Start & View
+                {tournament.status === "Soon" ? "Start & View" : "View"}
                 </Button>
               </TableCell>
             </TableRow>
@@ -332,6 +326,7 @@ const TournamentsPage: React.FC = () => {
       </Table>
     );
   };
+
   
   return (
     <div>
@@ -369,7 +364,25 @@ const TournamentsPage: React.FC = () => {
               </div>
             )}
           </div>
-          {renderTable(tournaments, openModal, handleOpenTournamentDetails)}
+          {/* Tabs */}
+          <div className="mb-6 border-b border-gray-200">
+            <nav className="-mb-px flex space-x-4">
+              {["Soon", "In Progress", "Finished"].map((status) => (
+                <button
+                  key={status}
+                  className={`px-4 py-2 border-b-2 font-medium text-sm ${
+                    activeTab === status
+                      ? "border-indigo-600 text-indigo-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
+                  onClick={() => setActiveTab(status)}
+                >
+                  {status}
+                </button>
+              ))}
+            </nav>
+          </div>
+          {renderTable(filteredTournaments, openModal, handleOpenTournamentDetails)}
         </CardContent>
       </Card>
   

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import PeopleIcon from '@material-ui/icons/People';
 
 export type Tournament = {
   tournamentId: number;
@@ -48,7 +49,7 @@ const TournamentModal: React.FC<TournamentModalProps> = ({ tournament, isOpen, o
           {/* Participants */}
           <div className="flex flex-col items-center bg-gray-50 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
             <h3 className="text-sm text-gray-600">Participants</h3>
-            <p className="text-sm text-gray-700">{tournament.nMaxParticipants}</p>
+            <p className="text-sm text-gray-700"><PeopleIcon className="mr-2" />{tournament.nMaxParticipants}</p>
           </div>
 
           {/* Register Code */}
