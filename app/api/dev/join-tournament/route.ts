@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, participants, participantImage, getTournamentByCode, getParticipantCountByTournamentId, getParticipantsByTournamentId } from "@/lib/db"; // Importamos la tabla de imágenes
+import { db, participants, participantImage, getTournamentByCode, getParticipantCountByTournamentId, getParticipantsByTournamentId } from "@/lib/db"; 
 import { eq } from "drizzle-orm";
 
 export async function POST(req: NextRequest) {
   try {
     const { tournamentId, participantName, selectedImage } = await req.json();
 
-    // Validar la existencia del torneo
+    
     const tournamentFromCode = await getTournamentByCode(tournamentId);
 
     if (!tournamentFromCode) {
@@ -25,10 +25,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Obtenemos la lista actual de participantes
+    
     const currentParticipantList = await getParticipantsByTournamentId(tournamentIdFromCode);
 
-    // Validar el límite de participantes
+    
     if (currentParticipantList.length >= tournamentFromCode.nMaxParticipants) {
       return NextResponse.json(
         { error: "The tournament has reached the maximum number of participants." },
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verificar si existe un participante con el mismo nombre
+    
     for (const participant of currentParticipantList) {
       if (participant.participantName === participantName) {
         return NextResponse.json(
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Insertar el participante
+    
     const participantResult = await db.insert(participants).values({
       tournamentId: tournamentIdFromCode,
       participantName,
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
 
     const participantId = participantResult[0].id;
 
-    // Insertar la imagen del participante en la tabla correspondiente
+    
     if (selectedImage) {
       await db.insert(participantImage).values({
         participantId: participantId,
