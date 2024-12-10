@@ -2,6 +2,9 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import { Loader } from "@/components/ui/loader";
+import ConfettiAnimation   from "@/components/ui/ConfettiAnimation";
+import { set } from "zod";
+import Dialog from '@/components/ui/alert-dialog';
 
 const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
   const [loading, setLoading] = useState(true);
@@ -14,6 +17,8 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
   const [opponentPassedId, setOpponentPassedId] = useState<number | null>(null);
   const [roundId, setRoundId] = useState<number | null>(null);
   const [matchId, setMatchId] = useState<number | null>(null);
+  const [showFinalWinnerDialog, setShowFinalWinnerDialog] = useState(false);
+  const [finalWinner, setFinalWinner] = useState<number | null>(null);
 
   interface Participant {
     id: number;
@@ -53,23 +58,68 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
           matchGames: tournamentData.match_game,
           participants: tournamentData.participant,
         });
+        
         window.bracketsViewer.onMatchClicked = async (match: any) => {
           console.log("match", match);
           console.log("match con round id", Number(match.round_id));
           setRoundId(Number(match.round_id));
           setMatchId(Number(match.id));
           try {
-            setSelectedMatch(match);
+            await setSelectedMatch(match);
             await getParticipant(match);
           } catch (error) {
             console.error(error);
           }
           console.log("o1", match.opponent1?.id);
           console.log("o1", match.opponent2?.id);
-          setShowInputMask(true);
+          //condición para mostrar el modal de ganador final
+          console.log("selectedMatch for POST ", Number(match.id));
+          console.log("tournamentId for POST ", Number(tournamentData.stage[0].id));
+          if(match.opponent1?.id && match.opponent2?.id){
+            if(match.opponent1?.score !== '-' && match.opponent2?.score !== '-'){
+              await fetch(`/api/dev/tournament/match/${Number(match.id)}`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  tournamentId: Number(tournamentData.stage[0].id) ?? 0
+                }),
+              })
+              .then(response => {
+                if (!response.ok) {
+                  return response.json().then(errorData => {
+                    console.error("Error en la solicitud POST:", errorData);
+                    throw new Error(errorData.error || "Error en la solicitud POST");
+                  });
+                }
+                return response.json();
+              })
+              .then(async responseData => {
+                console.log("Respuesta de la solicitud POST de si es ultimo:", responseData);
+                if (responseData.isLastMatch) { 
+                  if(match.opponent1?.score > match.opponent2?.score){
+                    setFinalWinner(match.opponent1?.id || 0);
+                  }else{
+                    setFinalWinner(match.opponent2?.id || 0);
+                  }
+                  setShowFinalWinnerDialog(true);
+                }else{
+                  setShowFinalWinnerDialog(false);
+                  setShowInputMask(true);
+                }
+              })
+              .catch(error => {
+                  console.error("Error al realizar la solicitud POST:", error);
+              });
+            } else {
+              setShowInputMask(true);
+            }
+            
+          }
+          
         };
         setLoading(false);
-        
       } else {
         console.error("bracketsViewer is not defined on the window object.");
       }
@@ -89,7 +139,7 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
     console.log('Participantes:', participant2);
 
 
-    setSelectedMatch({
+    await setSelectedMatch({
       ...match,
       opponent1Name: participant1?.participantName || "Sin Nombre",
       opponent2Name: participant2?.participantName || "Sin Nombre",
@@ -150,11 +200,16 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
           }),
         })
         .then(response => {
+            
             if (!response.ok) {
-              return response.json().then(errorData => {
-                console.error("Error en la solicitud PATCH:", errorData);
-                throw new Error(errorData.error || "Error en la solicitud PATCH");
-              });
+              if (response.status === 404) {// Si el status es 404, no hay siguiente match, es la final
+                return;
+              } else {
+                return response.json().then(errorData => {
+                  console.error("Error en la solicitud PATCH:", errorData);
+                  throw new Error(errorData.error || "Error en la solicitud PATCH");
+                });
+              }
             }
             return response.json();
           })
@@ -272,11 +327,79 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
     },
   };
 
+  const renderDialog = () => {
+    if (showFinalWinnerDialog && selectedMatch && finalWinner) {
+      return (
+        <div>
+        
+        {/* {selectedMatch && showFinalWinnerDialog && window.bracketsViewer&& (
+          <ConfettiAnimation show={true}/> 
+        )} */}
+        <Dialog
+          visible={showFinalWinnerDialog}
+          onHide={() => setShowFinalWinnerDialog(false)}
+          header="Final Result"
+          color="info"
+          icon={<span style={{ fontSize: '2rem' }}>🎉</span>}
+          footer={
+            <>
+              
+            </>
+          }
+          
+        >
+          <div style={{ 
+              display: "flex", 
+              flexDirection: "column", 
+              alignItems: "center", 
+              justifyContent: "center", 
+              textAlign: "center" 
+            }}>
+              <img
+                  src={`/static/profile/${finalWinner === selectedMatch?.opponent1?.id ? selectedMatch.opponent1Img : selectedMatch.opponent2Img}.png`}
+                  alt={`Profile of ${finalWinner === selectedMatch?.opponent1?.id ? selectedMatch.opponent1Name : selectedMatch.opponent2Name}`}
+                  className="h-20 w-20 rounded-full border-2 border-blue-400 shadow-lg"
+              />
+              <p
+                style={{
+                  margin: "0 0 10px",
+                  fontSize: "1rem",
+                  fontWeight: "600",
+                  color: "#333",
+                }}
+              >
+                  {finalWinner === selectedMatch?.opponent1?.id ? selectedMatch.opponent1Name : selectedMatch.opponent2Name}
+              </p>
+          </div>
+          <p style={{ textAlign: "center" }}>
+            <strong style={{ color: "#4A90E2", fontSize: "1.2rem" }}>Congratulations to the winner!</strong>
+          </p>
+        </Dialog>
+        </div>
+      );
+    }
+
+    // else if (showFinalWinnerDialog && selectedMatch && finalWinner) {
+    //   return (
+    //     <div>
+    //       <ConfettiAnimation show={true}/> 
+    //     </div>
+    //   );
+    // }
+  };
+
   return (
     <div>
+      
       <div className="brackets-viewer" />
+      
+
+      {renderDialog()}
+      
       {showInputMask && selectedMatch && (
+        
         <div style={styles.overlay} onClick={() => setShowInputMask(false)}>
+          
           <div
             style={{
               ...styles.inputMask,

@@ -11,7 +11,7 @@ import {
   boolean,
   date
 } from 'drizzle-orm/pg-core';
-import { not, and, or, count, eq, ilike } from 'drizzle-orm';
+import { not, and, or, count, eq, ilike, desc } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
 import { sql } from "drizzle-orm";
 
@@ -470,6 +470,39 @@ export async function getMatchByRoundIdAndMatchNumber(roundId: number, matchNumb
     throw error;
   }
 }
+
+export async function isLastMatchInTournament(tournamentId: number, matchId: number): Promise<boolean> {
+  try {
+    // Obtener el último match_id del torneo
+    const lastMatchResult = await db
+      .select({ lastMatchId: matchBracket.matchId })
+      .from(matchBracket)
+      .innerJoin(rounds, eq(matchBracket.roundId, rounds.roundId))
+      .innerJoin(tournamentGroups, eq(rounds.groupId, tournamentGroups.groupId))
+      .where(eq(tournamentGroups.tournamentId, tournamentId))
+      .orderBy(desc(matchBracket.matchId)) // Ordenar de mayor a menor
+      .limit(1); // Tomar solo el partido con el id más alto
+
+    const lastMatchId = lastMatchResult[0]?.lastMatchId;
+
+    if (!lastMatchId) {
+      console.warn(`No se encontró ningún partido para el torneo con ID: ${tournamentId}`);
+      return false; // No hay partidos en este torneo, por lo tanto no puede ser el último
+    }
+    console.log("Last match id:", lastMatchId);
+    console.log("Current match id:", matchId);
+    // Comparar si el matchId proporcionado es el último
+    if(Number(matchId)==Number(lastMatchId)){
+      return true;
+    }else {
+      return false;
+    }
+  } catch (error) {
+    console.error("Error checking if match is the last in the tournament:", error);
+    throw error;
+  }
+}
+
 
 // Update match results (home_result, away_result) for a specific match_id
 export async function updateMatchResults(matchId: number, homeResult: number, awayResult: number) {
