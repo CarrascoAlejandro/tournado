@@ -35,6 +35,7 @@ const TournamentsPage: React.FC = () => {
   const [tags, setTags] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("Soon");
   const [searchTerm, setSearchTerm] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const [formData, setFormData] = useState({
     tournamentCode:'',
@@ -274,6 +275,7 @@ const TournamentsPage: React.FC = () => {
 
   const handleSelect = (suggestions: string) => {
     setSearchTerm(suggestions);
+    setShowDropdown(false);
   };
   
   const renderTable = (tournaments: Tournament[], openModal: Function, handleOpenTournamentDetails: Function) => {
@@ -340,6 +342,7 @@ const TournamentsPage: React.FC = () => {
   };
 
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    setShowDropdown(true);
     if (e.key === "Enter" && searchTerm) {
       handleSelect(searchTerm);
     }
@@ -381,12 +384,14 @@ const TournamentsPage: React.FC = () => {
                     onKeyDown={handleInputKeyDown}
                     className="pl-10 rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 w-full"
                   />
-                   <SuggestionDropdown
-                    input={searchTerm}
-                    suggestions={suggestions}
-                    onSelect={handleSelect}
-                    onKeyDown={handleInputKeyDown} // Pass keydown handler
-                  />
+                  {showDropdown && (
+                    <SuggestionDropdown
+                      input={searchTerm}
+                      suggestions={suggestions}
+                      onSelect={handleSelect}
+                      onKeyDown={handleInputKeyDown} // Pasa el evento onKeyDown al SuggestionDropdown
+                    />
+                  )}
                 </div>
               </>
             ) : (
