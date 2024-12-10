@@ -2,6 +2,10 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import { Loader } from "@/components/ui/loader";
+import ConfettiAnimation from "@/components/ui/ConfettiAnimation";
+import { set } from "zod";
+import { useSession } from 'next-auth/react';
+import Dialog from '@/components/ui/alert-dialog';
 
 const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
   const [loading, setLoading] = useState(true);
@@ -14,10 +18,22 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
   const [opponentPassedId, setOpponentPassedId] = useState<number | null>(null);
   const [roundId, setRoundId] = useState<number | null>(null);
   const [matchId, setMatchId] = useState<number | null>(null);
+  const [showFinalWinnerDialog, setShowFinalWinnerDialog] = useState(false);
+  const [finalWinner, setFinalWinner] = useState<number | null>(null);
+  const [tournamentData, setTournamentData] = useState<any | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isEditable, setIsEditable] = useState(false);
+  const isEditableRef = useRef(isEditable);
+  const { data: session, status } = useSession(); 
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+
+  useEffect(() => {
+    isEditableRef.current = isEditable;
+  }, [isEditable]);
 
   interface Participant {
     id: number;
-    participantName: string;
+    participantImage: number;
   }
   interface Match {
     id: string;
@@ -29,14 +45,18 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
     } | null;
     opponent1Name?: string;
     opponent2Name?: string;
+    opponent1Img?: number;
+    opponent2Img?: number;
     round_id?: number;
   }
+  
 
   const fetchAndRenderBrackets = async () => {
     try {
       const res = await fetch(`/api/dev/tournament/${tournamentCode}/brackets`);
       if (!res.ok) {
         const errorData = await res.json();
+        setError(errorData);
         throw new Error(errorData.error || "Error fetching tournament data.");
       }
 
@@ -45,29 +65,81 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
       setTournamentId(Number(tournamentData.stage[0].id));
 
       if (window.bracketsViewer) {
+        window.bracketsViewer.setParticipantImages(tournamentData.participantImages.map((participant: Participant) => ({
+            participantId: participant.id,
+            imageUrl: `/static/profile/${participant.participantImage}.png`,
+        })));
         window.bracketsViewer.render({
           stages: tournamentData.stage,
           matches: tournamentData.match,
           matchGames: tournamentData.match_game,
           participants: tournamentData.participant,
         });
+
+        
         window.bracketsViewer.onMatchClicked = async (match: any) => {
+          if (!isEditableRef.current) return;
           console.log("match", match);
           console.log("match con round id", Number(match.round_id));
           setRoundId(Number(match.round_id));
           setMatchId(Number(match.id));
           try {
-            setSelectedMatch(match);
+            await setSelectedMatch(match);
             await getParticipant(match);
           } catch (error) {
             console.error(error);
           }
           console.log("o1", match.opponent1?.id);
           console.log("o1", match.opponent2?.id);
-          setShowInputMask(true);
+          //condición para mostrar el modal de ganador final
+          console.log("selectedMatch for POST ", Number(match.id));
+          console.log("tournamentId for POST ", Number(tournamentData.stage[0].id));
+          if(match.opponent1?.id && match.opponent2?.id){
+            if(match.opponent1?.score !== '-' && match.opponent2?.score !== '-'){
+              await fetch(`/api/dev/tournament/match/${Number(match.id)}`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  tournamentId: Number(tournamentData.stage[0].id) ?? 0
+                }),
+              })
+              .then(response => {
+                if (!response.ok) {
+                  return response.json().then(errorData => {
+                    console.error("Error en la solicitud POST:", errorData);
+                    throw new Error(errorData.error || "Error en la solicitud POST");
+                  });
+                }
+                return response.json();
+              })
+              .then(async responseData => {
+                console.log("Respuesta de la solicitud POST de si es ultimo:", responseData);
+                if (responseData.isLastMatch) { 
+                  if(match.opponent1?.score > match.opponent2?.score){
+                    setFinalWinner(match.opponent1?.id || 0);
+                  }else{
+                    setFinalWinner(match.opponent2?.id || 0);
+                  }
+                  setShowFinalWinnerDialog(true);
+                }else{
+                  setShowFinalWinnerDialog(false);
+                  setShowInputMask(true);
+                }
+              })
+              .catch(error => {
+                  console.error("Error al realizar la solicitud POST:", error);
+              });
+            } else {
+              setShowInputMask(true);
+            }
+            
+          }
+          
         };
         setLoading(false);
-        
+
       } else {
         console.error("bracketsViewer is not defined on the window object.");
       }
@@ -80,19 +152,26 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
     console.log("o1", match.opponent1?.id);
     console.log("o1", match.opponent2?.id);
     const participant1 = await getParticipantsByMatchId(Number(match.opponent1?.id));
+
     console.log('Participantes:', participant1);
     const participant2 = await getParticipantsByMatchId(Number(match.opponent2?.id));
+
     console.log('Participantes:', participant2);
 
-    setSelectedMatch({
+
+    await setSelectedMatch({
       ...match,
       opponent1Name: participant1?.participantName || "Sin Nombre",
       opponent2Name: participant2?.participantName || "Sin Nombre",
+      opponent1Img: participant1?.img || 1,
+      opponent2Img: participant2?.img || 1,
+
       round_id: match.round_id ?? 0,
     });
   };
 
   const updateMatch = async () => {
+    if (!isEditableRef.current) return;
     if (!selectedMatch || !opponent1Ref.current || !opponent2Ref.current) return;
 
     const score1 = Number(opponent1Ref.current.value);
@@ -128,7 +207,7 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
         }
         console.log("participantId", participantId);
 
-        // Trigger the PATCH request after updating the match
+        
         await fetch(`/api/dev/tournament/match`, {
           method: 'PATCH',
           headers: {
@@ -141,12 +220,17 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
             participantId: participantId ?? 0,
           }),
         })
-        .then(response => {
+         .then(response => {
+
             if (!response.ok) {
-              return response.json().then(errorData => {
-                console.error("Error en la solicitud PATCH:", errorData);
-                throw new Error(errorData.error || "Error en la solicitud PATCH");
-              });
+              if (response.status === 404) {// Si el status es 404, no hay siguiente match, es la final
+                return;
+              } else {
+                return response.json().then(errorData => {
+                  console.error("Error en la solicitud PATCH:", errorData);
+                  throw new Error(errorData.error || "Error en la solicitud PATCH");
+                });
+              }
             }
             return response.json();
           })
@@ -156,10 +240,10 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
           })
           .catch(error => {
             console.error("Error al realizar la solicitud PATCH:", error);
-        });
+          });
 
-        // Refetch and render brackets after updating the match
-        // fetchAndRenderBrackets();
+        
+        
       }
     } catch (error) {
       console.error("Failed to update match:", error);
@@ -182,9 +266,61 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
     }
   };
 
+  const getTournamentData = async () => {
+    try {
+      const res = await fetch(`/api/dev/tournament-details/${tournamentCode}`);
+      const data = await res.json();
+
+      if (res.ok) {
+        console.log("KKT Tournament data:", data.tournament);
+        setTournamentData(data.tournament);
+      } else {
+        setError(data.error || "There was an error fetching tournament data.");
+      }
+    } catch (error) {
+      setError("Error connecting to the server.");
+    }
+  };
+
+
   useEffect(() => {
-    fetchAndRenderBrackets();
+    const initialize = async () => {
+      await getTournamentData(); // Fetch tournament details
+      await fetchAndRenderBrackets(); // Render brackets
+      setLoading(false); // Stop loading spinner
+    };
+    initialize();
   }, [tournamentCode]);
+  
+  const checkEditPermissions = async () => {
+    console.log("Checking edit permissions...");
+    console.log("Session:", session);
+    console.log("Tournament data:", tournamentData);
+  
+    if (!session) {
+      console.log("Session not available.");
+      setIsEditable(false);
+      return;
+    }
+  
+    if (!tournamentData) {
+      console.log("Tournament data not loaded yet.");
+      setIsEditable(false);
+      return;
+    }
+  
+    const userMail = session.user?.email;
+    const isOwner = tournamentData.userMail === userMail;
+    const isFinished = tournamentData.status === "Finished";
+    setIsEditable(isOwner && !isFinished);
+  };
+
+  useEffect(() => {
+    if (status === "authenticated" && session && tournamentData) {
+      checkEditPermissions();
+    }
+  }, [session, tournamentData, status]);
+  
 
   const styles = {
     overlay: {
@@ -264,63 +400,353 @@ const BracketPage = ({ params }: { params: { tournamentCode: string } }) => {
     },
   };
 
+  const renderDialog = () => {
+    if (showFinalWinnerDialog && selectedMatch && finalWinner) {
+      return (
+        <div>
+        
+        {/* {selectedMatch && showFinalWinnerDialog && window.bracketsViewer&& (
+          <ConfettiAnimation show={true}/> 
+        )} */}
+        <Dialog
+          visible={showFinalWinnerDialog}
+          onHide={() => setShowFinalWinnerDialog(false)}
+          header="Final Result"
+          color="info"
+          icon={<span style={{ fontSize: '2rem' }}>🎉</span>}
+          footer={
+            <>
+              
+            </>
+          }
+          
+        >
+          <div style={{ 
+              display: "flex", 
+              flexDirection: "column", 
+              alignItems: "center", 
+              justifyContent: "center", 
+              textAlign: "center" 
+            }}>
+              <img
+                  src={`/static/profile/${finalWinner === selectedMatch?.opponent1?.id ? selectedMatch.opponent1Img : selectedMatch.opponent2Img}.png`}
+                  alt={`Profile of ${finalWinner === selectedMatch?.opponent1?.id ? selectedMatch.opponent1Name : selectedMatch.opponent2Name}`}
+                  className="h-20 w-20 rounded-full border-2 border-blue-400 shadow-lg"
+              />
+              <p
+                style={{
+                  margin: "0 0 10px",
+                  fontSize: "1rem",
+                  fontWeight: "600",
+                  color: "#333",
+                }}
+              >
+                  {finalWinner === selectedMatch?.opponent1?.id ? selectedMatch.opponent1Name : selectedMatch.opponent2Name}
+              </p>
+          </div>
+          <p style={{ textAlign: "center" }}>
+            <strong style={{ color: "#4A90E2", fontSize: "1.2rem" }}>Congratulations to the winner!</strong>
+          </p>
+        </Dialog>
+        </div>
+      );
+    }
+
+    // else if (showFinalWinnerDialog && selectedMatch && finalWinner) {
+    //   return (
+    //     <div>
+    //       <ConfettiAnimation show={true}/> 
+    //     </div>
+    //   );
+    // }
+  };
+
   return (
-    <div>
-      <div className="brackets-viewer" />
+
+    <div className="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-6" >
+      {renderDialog()}
+       
+      {loading && Loader(250, 250)}
+
+      {!loading && error && (
+        <h1 className="text-3xl font-semibold text-center text-red-500">{error}</h1>
+      )}
+
+      {!loading && !error && (
+        <div className="mb-6 w-full max-w-4xl p-4 bg-indigo-50 rounded-lg shadow-md">
+          <div className="text-lg font-semibold text-gray-700">
+            <p><strong>Start Date:</strong> {new Date(tournamentData?.startDate).toLocaleDateString()}</p>
+            <p><strong>End Date:</strong> {new Date(tournamentData?.endDate).toLocaleDateString()}</p>
+            <p><strong>Status:</strong> {tournamentData?.status}</p>
+            <p><strong>Tags:</strong> {tournamentData?.tags}</p>
+            {isEditableRef.current && (
+            <button
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-700"
+              onClick={() => setShowConfirmModal(true)}
+            >
+              Finish the tournament
+            </button>
+          )}
+          {showConfirmModal && (
+            <Dialog
+              visible={showConfirmModal}
+              onHide={() => setShowConfirmModal(false)}
+              header="Confirm Finish Tournament"
+              footer={
+                <>
+                  <button
+                    className="px-4 py-2 bg-gray-500 text-white rounded-lg shadow-md hover:bg-gray-700"
+                    onClick={() => setShowConfirmModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-700"
+                    onClick={async () => {
+                      try {
+                        const patchRes = await fetch('/api/dev/tournament/status', {
+                          method: "PATCH",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({
+                            tournamentId: tournamentData.tournamentId,
+                            newStatus: "Finished",
+                          }),
+                        });
+
+                        if (!patchRes.ok) {
+                          const errorData = await patchRes.json();
+                          throw new Error(errorData.error || "Error updating tournament status.");
+                        }
+
+                        const responseData = await patchRes.json();
+                        console.log("Tournament status updated:", responseData);
+                        // Recargar la página después de actualizar el estado del torneo
+                        window.location.reload();
+                      } catch (error) {
+                        console.error("Failed to update tournament status:", error);
+                      }
+                    }}
+                  >
+                    Confirm
+                  </button>
+                </>
+              }
+            >
+              <p>Are you sure you want to finish the tournament? Once finished, you will not be able to edit it later.</p>
+            </Dialog>
+          )}
+          </div>
+        </div>
+      )}
+      
+      <div style={{ padding: "20px" }}>
+      
+        <div className="brackets-viewer" />
+        {/* {showFinalWinnerDialog && <ConfettiAnimation show={true} />} */}
+        
+      </div>
       {showInputMask && selectedMatch && (
+        
         <div style={styles.overlay} onClick={() => setShowInputMask(false)}>
+          
           <div
-            style={styles.inputMask}
+            style={{
+              ...styles.inputMask,
+              padding: "20px",
+              maxWidth: "500px",
+              textAlign: "center",
+              borderRadius: "12px",
+              boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
+              background: "white",
+            }}
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-labelledby="input-mask-title"
           >
-            <h2 id="input-mask-title" style={styles.title}>
-              Record result
+            <h2
+              id="input-mask-title"
+              style={{
+                ...styles.title,
+                fontSize: "1.8rem",
+                color: "#4A90E2",
+                fontWeight: "bold",
+                marginBottom: "20px",
+              }}
+            >
+              Record Result
             </h2>
-            <div style={styles.scoreSection}>
-              <div style={styles.team}>
-                <input
-                  ref={opponent1Ref}
-                  type="number"
-                  style={styles.scoreInput}
-                  defaultValue={0}
-                  min="0"
-                  max="99"
-                  aria-label="Puntaje del equipo 1"
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: "30px",
+                margin: "20px 0",
+              }}
+            >
+              {/* Oponente 1 */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "flex-start",
+                  gap: "15px",
+                  flex: 1,
+                }}
+              >
+                <img
+                  src={`/static/profile/${selectedMatch.opponent1Img}.png`}
+                  alt={`Profile of ${selectedMatch.opponent1Name}`}
+                  className="h-20 w-20 rounded-full border-2 border-blue-400 shadow-lg"
                 />
-                <p style={styles.teamName}>{selectedMatch.opponent1Name}</p>
+                <div>
+                  <p
+                    style={{
+                      margin: "0 0 10px",
+                      fontSize: "1rem",
+                      fontWeight: "600",
+                      color: "#333",
+                    }}
+                  >
+                    {selectedMatch.opponent1Name}
+                  </p>
+                  <input
+                    ref={opponent1Ref}
+                    type="number"
+                    style={{
+                      width: "80px",
+                      height: "40px",
+                      textAlign: "center",
+                      padding: "5px",
+                      fontSize: "1.2rem",
+                      border: "2px solid #ddd",
+                      borderRadius: "8px",
+                      boxShadow: "inset 0 2px 5px rgba(0, 0, 0, 0.1)",
+                      transition: "border-color 0.2s",
+                    }}
+                    onFocus={(e) => (e.target.style.borderColor = "#4A90E2")}
+                    onBlur={(e) => (e.target.style.borderColor = "#ddd")}
+                    defaultValue={0}
+                    min="0"
+                    max="99"
+                    aria-label="Score of opponent 1"
+                  />
+                </div>
               </div>
-              <div style={styles.separator}>:</div>
-              <div style={styles.team}>
-                <input
-                  ref={opponent2Ref}
-                  type="number"
-                  style={styles.scoreInput}
-                  defaultValue={0}
-                  min="0"
-                  max="99"
-                  aria-label="Puntaje del equipo 2"
+              {/* Separador */}
+              <div
+                style={{
+                  fontSize: "2rem",
+                  fontWeight: "bold",
+                  color: "#4A90E2",
+                  flexShrink: 0,
+                }}
+              >
+                VS
+              </div>
+              {/* Oponente 2 */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "flex-end",
+                  gap: "15px",
+                  flex: 1,
+                }}
+              >
+                <div>
+                  <p
+                    style={{
+                      margin: "0 0 10px",
+                      fontSize: "1rem",
+                      fontWeight: "600",
+                      color: "#333",
+                      textAlign: "right",
+                    }}
+                  >
+                    {selectedMatch.opponent2Name}
+                  </p>
+                  <input
+                    ref={opponent2Ref}
+                    type="number"
+                    style={{
+                      width: "80px",
+                      height: "40px",
+                      textAlign: "center",
+                      padding: "5px",
+                      fontSize: "1.2rem",
+                      border: "2px solid #ddd",
+                      borderRadius: "8px",
+                      boxShadow: "inset 0 2px 5px rgba(0, 0, 0, 0.1)",
+                      transition: "border-color 0.2s",
+                    }}
+                    onFocus={(e) => (e.target.style.borderColor = "#4A90E2")}
+                    onBlur={(e) => (e.target.style.borderColor = "#ddd")}
+                    defaultValue={0}
+                    min="0"
+                    max="99"
+                    aria-label="Score of opponent 2"
+                  />
+                </div>
+                <img
+                  src={`/static/profile/${selectedMatch.opponent2Img}.png`}
+                  alt={`Profile of ${selectedMatch.opponent2Name}`}
+                  className="h-20 w-20 rounded-full border-2 border-blue-400 shadow-lg"
                 />
-                <p style={styles.teamName}>{selectedMatch.opponent2Name}</p>
               </div>
             </div>
-            <div style={styles.actions}>
+            {/* Botones */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-around",
+                marginTop: "20px",
+                gap: "10px",
+              }}
+            >
               <button
                 onClick={() => setShowInputMask(false)}
-                style={styles.cancelButton}
+                style={{
+                  padding: "10px 20px",
+                  fontSize: "1rem",
+                  background: "#f5f5f5",
+                  color: "#333",
+                  border: "1px solid #ddd",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  transition: "background 0.2s",
+                }}
+
               >
                 Cancel
               </button>
-              <button onClick={() => updateMatch()} style={styles.confirmButton}>
+              <button
+                onClick={() => updateMatch()}
+                style={{
+                  padding: "10px 20px",
+                  fontSize: "1rem",
+                  background: "#4A90E2",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  transition: "background 0.2s",
+                }}
+
+              >
                 Confirm
               </button>
             </div>
           </div>
+          
         </div>
+        
       )}
     </div>
   );
+  
 };
 
 export default BracketPage;

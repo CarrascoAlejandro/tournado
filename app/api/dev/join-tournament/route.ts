@@ -1,18 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, participants, getTournamentByCode, getParticipantCountByTournamentId, getParticipantsByTournamentId } from "@/lib/db"; // Importamos el nuevo método
+import { db, participants, participantImage, getTournamentByCode, getParticipantCountByTournamentId, getParticipantsByTournamentId } from "@/lib/db"; 
 import { eq } from "drizzle-orm";
 
 export async function POST(req: NextRequest) {
   try {
-    const { tournamentId, participantName } = await req.json();
+    const { tournamentId, participantName, selectedImage } = await req.json();
 
-    if (!tournamentId || !participantName) {
-      return NextResponse.json(
-        { error: "All fields are required." },
-        { status: 400 }
-      );
-    }
-
+    
     const tournamentFromCode = await getTournamentByCode(tournamentId);
 
     if (!tournamentFromCode) {
@@ -31,10 +25,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Obtenemos la cantidad actual de participantes
+    
     const currentParticipantList = await getParticipantsByTournamentId(tournamentIdFromCode);
 
-    // Verificamos si el límite se ha alcanzado
+    
     if (currentParticipantList.length >= tournamentFromCode.nMaxParticipants) {
       return NextResponse.json(
         { error: "The tournament has reached the maximum number of participants." },
@@ -42,7 +36,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verificar si existe un participante con el mismo nombre
+    
     for (const participant of currentParticipantList) {
       if (participant.participantName === participantName) {
         return NextResponse.json(
@@ -52,25 +46,35 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Insertamos el nuevo participante
-    const result = await db.insert(participants).values({
+    
+    const participantResult = await db.insert(participants).values({
       tournamentId: tournamentIdFromCode,
       participantName,
-    });
+    }).returning({ id: participants.participantId });
 
-    if (result) {
-      return NextResponse.json(
-        { message: "Participant successfully registered." },
-        { status: 201 }
-      );
-    } else {
+    if (!participantResult || participantResult.length === 0) {
       return NextResponse.json(
         { error: "Error registering participant. Please try again later." },
         { status: 500 }
       );
     }
+
+    const participantId = participantResult[0].id;
+
+    
+    if (selectedImage) {
+      await db.insert(participantImage).values({
+        participantId: participantId,
+        imageId: selectedImage,
+      });
+    }
+
+    return NextResponse.json(
+      { message: "Participant and image successfully registered." },
+      { status: 201 }
+    );
   } catch (error) {
-    console.error("Error inserting the participant:", error);
+    console.error("Error inserting the participant or image:", error);
     return NextResponse.json(
       { error: "Internal server error. Please try again later." },
       { status: 500 }

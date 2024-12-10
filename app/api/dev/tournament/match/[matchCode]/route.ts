@@ -1,4 +1,4 @@
-import { updateMatchResults } from "@/lib/db";
+import { updateMatchResults, isLastMatchInTournament } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function PUT(req: NextRequest, { params }: { params: { matchCode: string } }) {
@@ -47,6 +47,27 @@ export async function PATCH(req: NextRequest, { params }: { params: { matchCode:
     return NextResponse.json(updatedMatch);
   } catch (error) {
     console.error("Error updating match participant id:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}
+
+export async function POST(req: NextRequest, { params }: { params: { matchCode: string} }) {
+  try {
+    const { matchCode } = params;
+    const { tournamentId } = await req.json();
+    // Validar los parámetros
+    console.log("in post:" + matchCode, tournamentId);
+    if (!matchCode || !tournamentId || isNaN(Number(matchCode)) || isNaN(Number(tournamentId))) {
+      return NextResponse.json({ error: "Invalid matchCode or tournamentId" }, { status: 400 });
+    }
+
+    // Verificar si el partido es el último del torneo
+    const isLastMatch = await isLastMatchInTournament(Number(tournamentId), Number(matchCode));
+    console.log("isLastMatch en POST:", isLastMatch);
+    // Responder con el estado de si es el último partido o no
+    return NextResponse.json({ isLastMatch });
+  } catch (error) {
+    console.error("Error checking if match is the last in the tournament:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

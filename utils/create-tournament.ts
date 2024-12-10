@@ -19,9 +19,9 @@ export const createTournamentBracket = async (tournamentData: {
 
   // Add BYEs to participants
   const activeParticipants = [...participants];
-  for (let i = 0; i < byesNeeded; i++) {
+  /* for (let i = 0; i < byesNeeded; i++) {
     activeParticipants.push(null); // Represent BYEs as `null`
-  }
+  }*/
 
   // Ensure no excessive consecutive BYEs
   const hasExcessiveConsecutiveByes = (participants: Array<any>, maxByes = 2) => {
@@ -50,16 +50,38 @@ export const createTournamentBracket = async (tournamentData: {
     return array;
   };
 
-  const ensureNoExcessiveConsecutiveByes = (participants: Array<any>, maxByes = 2) => {
+  /* const ensureNoExcessiveConsecutiveByes = (participants: Array<any>, maxByes = 1) => {
     let shuffledParticipants = [...participants];
     while (hasExcessiveConsecutiveByes(shuffledParticipants, maxByes)) {
+      console.log("Participants list: ", shuffledParticipants);
       shuffledParticipants = shuffleArray(shuffledParticipants);
     }
+    console.log("Final participants list: ", shuffledParticipants);
     return shuffledParticipants;
-  };
+  }; */
+
+  const ensureNoExcessiveConsecutiveByes = (participants: Array<any>, byesNeeded = 0) => {
+      // Shuffle participants
+      let tempShuffledParticipants = shuffleArray([...participants]);
+  
+      //Starting from the end, interleave BYEs (nulls) until the desired number is reached
+      // For example: [1, 2, 3, 4, 5] with 3 BYEs -> [1, 2, 3, null, 4, null, 5, null]
+      let i = tempShuffledParticipants.length ;
+      while (byesNeeded > 0) {
+        tempShuffledParticipants.splice(i, 0, null);
+        byesNeeded--;
+        i -= 1;
+      }
+  
+      console.log("Final participants list: ");
+      for(let i = 0; i < tempShuffledParticipants.length; i+=2) {
+          console.log(`${tempShuffledParticipants[i]} vs ${tempShuffledParticipants[i+1]}`);
+      }
+      return tempShuffledParticipants;
+    }
 
   // Shuffle participants to ensure no excessive consecutive BYEs
-  const shuffledParticipants = ensureNoExcessiveConsecutiveByes(activeParticipants);
+  const shuffledParticipants = ensureNoExcessiveConsecutiveByes(activeParticipants, byesNeeded);
 
   // Insert the group
   await insertGroup(tournamentData.tournamentId, 1); // Single group (number 1)

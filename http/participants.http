@@ -1,2 +1,10 @@
 GET http://localhost:3000/api/dev/get-participants/43477622
 Accept: application/json
+
+### get participant info by id:
+GET http://localhost:3000/api/dev/get-participants/participant/314
+Accept: application/json
+
+### delete participant by id:
+DELETE http://localhost:3000/api/dev/get-participants/participant/1
+Accept: application/json

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import Link from 'next/link';
+import PeopleIcon from '@material-ui/icons/People';
 import {
   Card,
   CardContent,
@@ -16,20 +16,26 @@ import Modal from '@/components/ui/modal';
 import { Input } from '@/components/ui/input';
 import TournamentModal from '@/components/ui/tournament-modal';
 import { Tournament } from '@/components/ui/tournament-modal';
+import { TagInput } from '@/components/ui/tag-input';
+import { TagList } from '@/components/ui/tag-list';
 import Dialog from '@/components/ui/alert-dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { set } from 'zod';
+import { SuggestionDropdown } from '@/components/ui/suggestion-dropdown';
 import { Loader } from '@/components/ui/loader';
-
+import { Search } from 'lucide-react';
 
 const TournamentsPage: React.FC = () => {
-  const { data: session, status } = useSession(); // Obtén la sesión y su estado
+  const { data: session, status } = useSession(); 
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false); 
   const [error, setError] = useState(""); 
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showCreateSuccessDialog, setShowCreateSuccessDialog] = useState(false);
+  const [tags, setTags] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState("Soon");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const [formData, setFormData] = useState({
     tournamentCode:'',
@@ -40,26 +46,43 @@ const TournamentsPage: React.FC = () => {
     nMaxParticipants: 2,
     tags: ''
   });
-  const fetchTournaments = async () => {
-    if (session?.user?.id) { // Comprueba si hay una sesión válida
-      try {
-        const response = await fetch(`/api/dev/tournament?userEmail=${session.user.email}`);
-        const text = await response.text(); // Obtén la respuesta como texto
-        console.log('Response:', text); // Verifica la respuesta en la consola
 
-        const data = JSON.parse(text);
-        console.log('Tournaments:', data);
-        setTournaments(data);
+  const fetchData = async () => {
+    if (session?.user?.id) {
+      try {
+        // Fetch tournaments
+        const tournamentsResponse = await fetch(`/api/dev/tournament?userEmail=${session.user.email}`);
+        const tournamentsText = await tournamentsResponse.text();
+        console.log('Tournaments Response:', tournamentsText);
+        const tournamentsData = JSON.parse(tournamentsText);
+        console.log('Tournaments:', tournamentsData);
+        setTournaments(tournamentsData);
+  
+        // Fetch suggestions
+        const tagsResponse = await fetch(`/api/dev/tags/${session.user.email}`);
+        if (tagsResponse.ok) {
+          const { tags } = await tagsResponse.json();
+          console.log('Fetched tags:', tags);
+          setSuggestions(tags);
+        } else {
+          console.error('Failed to fetch suggestions');
+        }
       } catch (error) {
-        console.error('Error fetching tournaments:', error);
+        console.error('Error fetching data:', error);
       }
     }
   };
+  
+  useEffect(() => {
+    fetchData(); // Fetch tournaments and suggestions when the component mounts
+  }, [session]);
 
   useEffect(() => {
-
-    fetchTournaments();
-  }, [session]); // Dependencia de la sesión
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      tags: tags.join(', '),
+    }));
+  }, [tags]);
 
   const handleSubmitTournament = async () => {
     try {
@@ -69,7 +92,8 @@ const TournamentsPage: React.FC = () => {
         return;
       }
       if(formData.tags === '') {
-        console.error('Tags is required');
+        console.error('Tags are required');
+        setError("Please add at least one tag.");
         return;
       }
       const response = await fetch('/api/dev/tournament', {
@@ -77,16 +101,16 @@ const TournamentsPage: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData), // Enviamos los datos del formulario
+        body: JSON.stringify(formData), 
       });
 
       if (response.ok) {
         const data = await response.json();
         console.log('Torneo creado exitosamente:', data);
         // Aquí puedes manejar el cierre del modal o mostrar un mensaje de éxito
-        await fetchTournaments();
+        await fetchData(); // Actualizar la lista de torneos
         setIsCreateModalOpen(false);
-        setShowCreateSuccessDialog(true); // Mostrar el diálogo de éxito
+        setShowCreateSuccessDialog(true); 
         setFormData({
           tournamentCode: '',
           tournamentName: '',
@@ -96,6 +120,7 @@ const TournamentsPage: React.FC = () => {
           nMaxParticipants: 2,
           tags: ''
         });
+        setTags([]); // Limpiar los tags
       } else {
         console.error('Error al crear el torneo');
       }
@@ -117,12 +142,13 @@ const TournamentsPage: React.FC = () => {
   if (status === 'loading') return (
     <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }} >
       {Loader(250, 250)} 
-    </div> // Loading indicator // FIXME: make size depend on screen size;
+    </div> 
   )
 
   const openCreateModal = () => {
     console.log('Opening create modal');
     setIsCreateModalOpen(true);
+    setTags([]); // Limpiar los tags al abrir el modal
   };
 
   const closeCreateModal = () => {
@@ -136,20 +162,21 @@ const TournamentsPage: React.FC = () => {
       nMaxParticipants: 0,
       tags: ''
     });
+    setTags([]); // Limpiar los tags al cerrar el modal
   };
 
   const isValidDate = (date: string): boolean => {
     const selectedDate = new Date(date);
     const today = new Date();
   
-    // Agregamos 4 horas y 1 minuto al selectedDate
+    
     selectedDate.setHours(selectedDate.getHours() + 4);
     selectedDate.setMinutes(selectedDate.getMinutes() + 1);
   
-    // Normalizamos "today" al inicio del día (00:00:00)
+    
     today.setHours(0, 0, 0, 0);
   
-    const isValid = selectedDate >= today; // Comparamos solo los días normalizados en relación con today
+    const isValid = selectedDate >= today; 
     console.log("Validating date:", {
       selectedDate,
       today,
@@ -158,8 +185,6 @@ const TournamentsPage: React.FC = () => {
   
     return isValid;
   };
-  
-  
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -195,21 +220,25 @@ const TournamentsPage: React.FC = () => {
       return updatedFormData;
     });
   };
-  
 
-  
-  
-  
-
-
-  const handleOpenTournamentDetails = (tournamentCode: string) => {
+  const handleOpenTournamentDetails = (tournamentCode: string, status: "Soon" | "In Progress" | "Finished") => {
     if (!tournamentCode) {
       console.error('Tournament code is missing');
       return;
     }
-    const tournamentUrl = `/tournament-details/${tournamentCode}`;
+  
+    let tournamentUrl;
+    if (status === 'In Progress' || status === 'Finished') {
+      tournamentUrl = `/bracket-tournament/${tournamentCode}`;
+    } else if (status === 'Soon') {
+      tournamentUrl = `/tournament-details/${tournamentCode}`;
+    } else {
+      console.error('Unknown tournament status:', status);
+      return;
+    }
+  
     window.open(tournamentUrl, '_blank');
-  };  
+  };
 
   const handleStatusChange = (status: string) => {
     setError("");
@@ -220,7 +249,6 @@ const TournamentsPage: React.FC = () => {
     e.preventDefault();
     console.log('Creating tournament:', formData);
     handleSubmitTournament();
-    closeCreateModal();
   };
   
   const renderDialog = () => {
@@ -243,27 +271,144 @@ const TournamentsPage: React.FC = () => {
   
     return null; // Si no hay diálogos activos, no renderiza nada
   };
+
+  const filteredTournaments = tournaments.filter((tournament) => {
+    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+    const matchesName = tournament.tournamentName.toLowerCase().includes(lowerCaseSearchTerm);
+    const tagsArray = typeof tournament.tags === "string"
+      ? tournament.tags.split(",").map(tag => tag.trim().toLowerCase())
+      : (tournament.tags as string[]).map((tag: string) => tag.toLowerCase());
+    const matchesTags = tagsArray.some((tag: string) => tag.includes(lowerCaseSearchTerm));
+    const matchesStatus = tournament.status === activeTab;
+    return (matchesName || matchesTags) && matchesStatus;
+  });
+
+  const handleSelect = (suggestions: string) => {
+    setSearchTerm(suggestions);
+    setShowDropdown(false);
+  };
   
-  
+  const renderTable = (tournaments: Tournament[], openModal: Function, handleOpenTournamentDetails: Function) => {
+    if (!Array.isArray(tournaments) || tournaments.length === 0) {
+      return (
+        <div className="text-center text-gray-500 py-4">
+          <p>You don't have any tournaments created yet.</p>
+          <p>Click on "Create Tournament" to get started!</p>
+        </div>
+      );
+    }
+
+    return (
+      <Table className="min-w-full border-collapse bg-white rounded-lg shadow-md">
+        <TableHeader>
+          <TableRow className="text-gray-700 bg-indigo-100">
+            <TableCell className="font-semibold">Code</TableCell>
+            <TableCell className="font-semibold">Name</TableCell>
+            <TableCell className="font-semibold">Status</TableCell>
+            <TableCell className="font-semibold">Participants</TableCell>
+            <TableCell className="font-semibold">Tags</TableCell>
+            <TableCell className="font-semibold">Manage Tournament</TableCell>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {tournaments.map((tournament) => (
+            <TableRow
+              key={tournament.tournamentId}
+              onClick={() => openModal(tournament)}
+              className="cursor-pointer hover:bg-indigo-50 transition duration-200"
+            >
+              <TableCell>{tournament.tournamentCode}</TableCell>
+              <TableCell>{tournament.tournamentName}</TableCell>
+              <TableCell>{tournament.status}</TableCell>
+              <TableCell>
+                <PeopleIcon className="mr-2" />
+                {tournament.nMaxParticipants}
+              </TableCell>
+              <TableCell>
+                <TagList
+                  tags={
+                    typeof tournament.tags === "string"
+                      ? tournament.tags.split(",").map((tag) => tag.trim())
+                      : tournament.tags
+                  }
+                />
+              </TableCell>
+              <TableCell>
+                <Button
+                  className="bg-indigo-600 text-white text-xs px-4 py-2 rounded-lg hover:bg-indigo-700"
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent triggering row click
+                    handleOpenTournamentDetails(tournament.tournamentCode, tournament.status as "Soon" | "In Progress" | "Finished");
+                  }}
+                >
+                {tournament.status === "Soon" ? "Start & View" : "View"}
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    );
+  };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    setShowDropdown(true);
+    if (e.key === "Enter" && searchTerm) {
+      handleSelect(searchTerm);
+    }
+  };
+
   return (
     <div>
-      {/* Renderizar los diálogos dinámicamente */}
+      {/* Render dynamic dialogs */}
       {renderDialog()}
-
+  
       <Card className="shadow-lg rounded-xl bg-white p-6">
         <CardHeader>
-          <CardTitle className="text-xl font-semibold text-gray-800">My Tournaments</CardTitle>
-          <CardDescription className="text-sm text-gray-500">View all ongoing and completed tournaments you created.</CardDescription>
+          <CardTitle className="text-xl font-semibold text-gray-800">
+            My Tournaments
+          </CardTitle>
+          <CardDescription className="text-sm text-gray-500">
+            View all ongoing and completed tournaments you created.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex justify-start items-center mb-6">
             {session ? (
-              <Button onClick={openCreateModal} className="bg-indigo-600 text-white hover:bg-indigo-700 transition duration-300">
-                Create Tournament
-              </Button>
+              <>
+                <Button
+                  onClick={openCreateModal}
+                  className="bg-indigo-600 text-white hover:bg-indigo-700 transition duration-300"
+                >
+                  Create Tournament
+                </Button>
+                <div className="relative w-1/2 ml-4">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search className="text-gray-500" />
+                  </div>
+                  <Input
+                    type="text"
+                    placeholder="Search by name or tags"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={handleInputKeyDown}
+                    className="pl-10 rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 w-full"
+                  />
+                  {showDropdown && (
+                    <SuggestionDropdown
+                      input={searchTerm}
+                      suggestions={suggestions}
+                      onSelect={handleSelect}
+                      onKeyDown={handleInputKeyDown} // Pasa el evento onKeyDown al SuggestionDropdown
+                    />
+                  )}
+                </div>
+              </>
             ) : (
               <div className="text-center w-full">
-                <p className="mb-4 text-gray-600">You need to sign in to start creating a tournament.</p>
+                <p className="mb-4 text-gray-600">
+                  You need to sign in to start creating a tournament.
+                </p>
                 <img
                   src="/static/Sign-up-bro.png"
                   alt="Login required"
@@ -272,64 +417,30 @@ const TournamentsPage: React.FC = () => {
               </div>
             )}
           </div>
-  
-          {/* {session && ( */}
-          {session && tournaments.length === 0 ? (
-            // Mensaje cuando no hay torneos creados
-            <div className="text-center text-gray-500 py-4">
-              <p>You don't have any tournaments created yet.</p>
-              <p>Click on "Create Tournament" to get started!</p>
+          {/* Tabs */}
+          {session && (
+          <>
+            {/* Tabs */}
+            <div className="mb-6 border-b border-gray-200">
+              <nav className="-mb-px flex space-x-4">
+                {["Soon", "In Progress", "Finished"].map((status) => (
+                  <button
+                    key={status}
+                    className={`px-4 py-2 border-b-2 font-medium text-sm ${
+                      activeTab === status
+                        ? "border-indigo-600 text-indigo-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
+                    onClick={() => setActiveTab(status)}
+                  >
+                    {status}
+                  </button>
+                ))}
+              </nav>
             </div>
-          ) : (
-            // Tabla de torneos si hay datos
-            <Table className="min-w-full border-collapse bg-white rounded-lg shadow-md">
-              <TableHeader>
-                <TableRow className="text-gray-700 bg-indigo-100">
-                  <TableCell className="font-semibold">Code</TableCell>
-                  <TableCell className="font-semibold">Name</TableCell>
-                  <TableCell className="font-semibold">Status</TableCell>
-                  <TableCell className="font-semibold">Start Date</TableCell>
-                  <TableCell className="font-semibold">End Date</TableCell>
-                  <TableCell className="font-semibold">Participants</TableCell>
-                  <TableCell className="font-semibold">Manage Tournament</TableCell>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {Array.isArray(tournaments) ? (
-                  tournaments.map((tournament) => (
-                    <TableRow
-                      key={tournament.tournamentId}
-                      onClick={() => openModal(tournament)}
-                      className="cursor-pointer hover:bg-indigo-50 transition duration-200"
-                    >
-                      {/* TODO: El código de torneo está repertido, en vez de eso se podría mostrar la cantidad de participantes registrados */}
-                      <TableCell>{tournament.tournamentCode}</TableCell>
-                      <TableCell>{tournament.tournamentName}</TableCell>
-                      <TableCell>{tournament.status}</TableCell>
-                      <TableCell>{tournament.startDate}</TableCell>
-                      <TableCell>{tournament.endDate}</TableCell>
-                      <TableCell>{tournament.nMaxParticipants}</TableCell>
-                      <TableCell>                      
-                        <Button 
-                          className="bg-indigo-600 text-white text-xs px-4 py-2 rounded-lg hover:bg-indigo-700"
-                          onClick={(e) => {
-                            e.stopPropagation(); // Prevent triggering row click
-                            handleOpenTournamentDetails(tournament.tournamentCode);
-                          }}
-                        >
-                          View & Start
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center text-gray-500 py-4">No tournaments available</TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          )}
+            {renderTable(filteredTournaments, openModal, handleOpenTournamentDetails)}
+          </>
+        )}
         </CardContent>
       </Card>
   
@@ -377,7 +488,7 @@ const TournamentsPage: React.FC = () => {
                 name="startDate"
                 value={formData.startDate}
                 onChange={handleChange}
-                min={new Date().toISOString().split("T")[0]} // Fecha mínima hoy
+                min={new Date().toISOString().split("T")[0]} 
                 className="rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 w-full"
                 required
               />
@@ -395,7 +506,7 @@ const TournamentsPage: React.FC = () => {
                 name="endDate"
                 value={formData.endDate}
                 onChange={handleChange}
-                min={formData.startDate || new Date().toISOString().split("T")[0]} // Mínimo es hoy o la fecha de inicio
+                min={formData.startDate || new Date().toISOString().split("T")[0]} 
                 className="rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 w-full"
                 required
               />
@@ -413,8 +524,8 @@ const TournamentsPage: React.FC = () => {
                   placeholder="Max participants"
                   value={formData.nMaxParticipants}
                   onChange={handleChange}
-                  min="2" // Asegurar el mínimo permitido en el navegador
-                  max="32" // Asegurar el máximo permitido en el navegador
+                  min="2" 
+                  max="32" 
                   className="rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 w-full"
                   required
                 />
@@ -423,22 +534,21 @@ const TournamentsPage: React.FC = () => {
 
   
             <div>
-              <label htmlFor="tags" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="tags" className="block text-sm font-medium text-gray-700">
                 Tag:
               </label>
-              <Input
-                type="text"
+              <TagInput tags={tags} setTags={setTags} suggestions={suggestions} />
+              <input
                 id="tags"
+                style={{ opacity: 0, height: "1px", position: 'absolute' }}
+                type="text"
                 name="tags"
-                placeholder="Tag"
                 value={formData.tags}
                 onChange={handleChange}
-                className="rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 w-full"
                 required
               />
             </div>
           </div>
-  
           <div className="mt-6 flex justify-center">
             <Button type="submit" className="bg-indigo-600 text-white hover:bg-indigo-700 transition duration-300">Create Tournament</Button>
           </div>
@@ -448,7 +558,5 @@ const TournamentsPage: React.FC = () => {
   );
   
 }  
-
-
 
 export default TournamentsPage;

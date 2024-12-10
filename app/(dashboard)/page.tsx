@@ -400,17 +400,21 @@ export default function HomePage() {
           &copy; {new Date().getFullYear()} Tournado. All rights reserved.
         </p>
         <p className="mt-2 text-sm">
-          <a href="#" className="text-[#097597] hover:underline">
+          <Link href="/privacy-policy" className="text-[#097597] hover:underline">
             Privacy Policy
-          </a>{' '}
+          </Link>
           |
-          <a href="#" className="text-[#097597] hover:underline ml-2">
+          <Link href="/terms-of-service" className="text-[#097597] hover:underline ml-2">
             Terms of Service
-          </a>{' '}
+          </Link>
           |
-          <a href="#" className="text-[#097597] hover:underline ml-2">
+          <Link
+            href="/contact"
+            className="text-[#097597] hover:underline ml-2"
+          >
             Contact
-          </a>
+          </Link>
+          
         </p>
       </footer>
       <script src="script.js"></script>

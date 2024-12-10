@@ -11,7 +11,7 @@ import {
   boolean,
   date
 } from 'drizzle-orm/pg-core';
-import { not, and, or, count, eq, ilike } from 'drizzle-orm';
+import { not, and, or, count, eq, ilike, desc } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
 import { sql } from "drizzle-orm";
 
@@ -121,6 +121,35 @@ export const participants = pgTable('participant', {
   tournamentId: integer('tournament_id').notNull()
 });
 
+export async function deleteParticipantById(participantId: number) {
+  try {
+    await db
+      .delete(participants)
+      .where(eq(participants.participantId, participantId));
+    console.log(`Participante con ID ${participantId} eliminado exitosamente.`);
+  } catch (error) {
+    console.error("Error al eliminar participante:", error);
+    throw error;
+  }
+}
+
+export async function updateTournamentStatusByIdAndUserMail(tournamentId: number, userMail: string, newStatus: "Soon" | "In Progress" | "Finished") {
+  try {
+    const result = await db
+      .update(tournaments)
+      .set({ status: newStatus })
+      .where(and(eq(tournaments.tournamentId, tournamentId), eq(tournaments.userMail, userMail)));
+
+    if (result.rowCount === 0) {
+      console.log(`No se encontró un torneo con ID ${tournamentId} para el usuario con correo ${userMail}`);
+    } else {
+      console.log(`Estado del torneo con ID ${tournamentId} actualizado a ${newStatus} para el usuario con correo ${userMail}`);
+    }
+  } catch (error) {
+    console.error("Error al actualizar el estado del torneo:", error);
+    throw error;
+  }
+}
 
 export const tournamentGroups = pgTable('tournament_groups', {//por eliminación simple solo tenemos 1 grupo por torneo
   groupId: serial('group_id').primaryKey(),
@@ -236,7 +265,7 @@ export async function insertTournament(
     userMail
   });
 
-  // Si la validación es exitosa, haces el insert en la base de datos
+  // Si la validación es exitosa, haces el insert en la base de datos 
   
   try {
     await db.insert(tournaments).values({
@@ -252,6 +281,24 @@ export async function insertTournament(
     console.log(`Torneo ${tournamentName} insertado con éxito`);
   } catch (error) {
     console.error("Error al insertar torneo:", error);
+    throw error;
+  }
+}
+
+export async function getTagsByUserMail(userMail: string): Promise<string[]> {
+  try {
+    const tags = await db
+      .select({ tags: tournaments.tags })
+      .from(tournaments)
+      .where(eq(tournaments.userMail, userMail));
+
+    const uniqueTags = Array.from(
+      new Set(tags.flatMap(tagEntry => tagEntry.tags.split(',')))
+    );
+
+    return uniqueTags;
+  } catch (error) {
+    console.error("Error fetching tags by user mail:", error);
     throw error;
   }
 }
@@ -459,6 +506,39 @@ export async function getMatchByRoundIdAndMatchNumber(roundId: number, matchNumb
   }
 }
 
+export async function isLastMatchInTournament(tournamentId: number, matchId: number): Promise<boolean> {
+  try {
+    // Obtener el último match_id del torneo
+    const lastMatchResult = await db
+      .select({ lastMatchId: matchBracket.matchId })
+      .from(matchBracket)
+      .innerJoin(rounds, eq(matchBracket.roundId, rounds.roundId))
+      .innerJoin(tournamentGroups, eq(rounds.groupId, tournamentGroups.groupId))
+      .where(eq(tournamentGroups.tournamentId, tournamentId))
+      .orderBy(desc(matchBracket.matchId)) // Ordenar de mayor a menor
+      .limit(1); // Tomar solo el partido con el id más alto
+
+    const lastMatchId = lastMatchResult[0]?.lastMatchId;
+
+    if (!lastMatchId) {
+      console.warn(`No se encontró ningún partido para el torneo con ID: ${tournamentId}`);
+      return false; // No hay partidos en este torneo, por lo tanto no puede ser el último
+    }
+    console.log("Last match id:", lastMatchId);
+    console.log("Current match id:", matchId);
+    // Comparar si el matchId proporcionado es el último
+    if(Number(matchId)==Number(lastMatchId)){
+      return true;
+    }else {
+      return false;
+    }
+  } catch (error) {
+    console.error("Error checking if match is the last in the tournament:", error);
+    throw error;
+  }
+}
+
+
 // Update match results (home_result, away_result) for a specific match_id
 export async function updateMatchResults(matchId: number, homeResult: number, awayResult: number) {
   try {
@@ -525,6 +605,42 @@ export async function getMatchGamesByMatchId(matchId: number) {
   }
 }
 
+// Nueva tabla: participant_image
+export const participantImage = pgTable('participant_image', {
+  id: serial('id').primaryKey(),
+  imageId: integer('image_id').notNull(),
+  participantId: integer('participant_id').notNull(),
+});
+
+// Función para insertar un registro en participant_image
+export async function insertParticipantImage(participantId: number, imageId: number) {
+  try {
+    await db.insert(participantImage).values({ participantId, imageId });
+    console.log(`Imagen con ID ${imageId} asociada al participante con ID ${participantId}`);
+  } catch (error) {
+    console.error("Error al insertar participant_image:", error);
+    throw error;
+  }
+}
+
+// Función para obtener un registro de participant_image según participant_id
+export async function getParticipantImageByParticipantId(participantId: number) {
+  try {
+    const participantImageRecord = await db
+      .select()
+      .from(participantImage)
+      .where(eq(participantImage.participantId, participantId))
+      .limit(1);
+
+    // Si no hay registro, devuelve el valor predeterminado de imageId = 1
+    return participantImageRecord.length > 0 ? participantImageRecord[0].imageId : 1;
+  } catch (error) {
+    console.error("Error al obtener participant_image:", error);
+    throw error;
+  }
+}
+
+
 const dbFunctions = {
   insertUser,
   userExists,
@@ -551,7 +667,10 @@ const dbFunctions = {
   insertMatchGame,
   getMatchGamesByMatchId,
   deleteTournamentById,
-  getParticipantCountByTournamentId
+  getParticipantCountByTournamentId,
+  participantImage,
+  insertParticipantImage,
+  getParticipantImageByParticipantId
 };
 
 export default dbFunctions;

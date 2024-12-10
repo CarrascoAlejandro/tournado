@@ -1,24 +1,30 @@
 "use client";
 
-import { Loader } from "@/components/ui/loader";
 import { useEffect, useState } from "react";
+import { Loader } from "@/components/ui/loader";
+import { useRouter } from "next/navigation";
+import { FaTrashAlt } from "react-icons/fa"; 
+import { TagList } from '@/components/ui/tag-list';
 
 interface Participant {
   participantId: number;
   participantName: string;
   tournamentId: number;
+  participantImage: number;
 }
 
 const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
-
   const { tournamentId } = params;
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false); // Cambiar a false inicialmente
+  const [loading, setLoading] = useState<boolean>(true);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [tournamentData, setTournamentData] = useState<any | null>(null);
+  const router = useRouter();
 
+  
   const fetchParticipants = async () => {
     try {
-      setLoading(true);
       const res = await fetch(`/api/dev/get-participants/${tournamentId}`);
       const data = await res.json();
 
@@ -29,40 +35,121 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
       }
     } catch (error) {
       setError("Error connecting to the server.");
+    }
+  };
+
+  const deleteParticipant = async (participantId: number) => {
+    try {
+      setLoading(true);
+      const res = await fetch(
+        `/api/dev/get-participants/participant/${participantId}`,
+        {
+          method: "DELETE",
+        }
+      );
+      if (res.ok) {
+        setParticipants((prev) =>
+          prev.filter((participant) => participant.participantId !== participantId)
+        );
+        setError(null);
+      } else {
+        const data = await res.json();
+        setError(data.error || "Error deleting the participant.");
+      }
+    } catch (error) {
+      setError("Error connecting to the server.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleMatchLogic = async () => {
-    setLoading(true); // Activar el indicador de carga
-  
+  const fetchUserEmail = async () => {
     try {
-      // Intentar obtener los brackets del torneo
+      const res = await fetch("/api/auth/session");
+      const data = await res.json();
+
+      if (res.ok && data?.user?.email) {
+        setUserEmail(data.user.email);
+      } else {
+        setUserEmail(null);
+        router.push("/login");
+      }
+    } catch (error) {
+      setError("Error fetching user email.");
+      router.push("/login");
+    }
+  };
+
+  const getTournamentData = async () => {
+    try {
+      const res = await fetch(`/api/dev/tournament-details/${tournamentId}`);
+      const data = await res.json();
+      console.log(data);
+      if (res.ok) {
+        setTournamentData(data.tournament);
+      } else {
+        setError(data.error || "There was an error fetching tournament data.");
+      }
+    } catch (error) {
+      setError("Error connecting to the server.");
+    }
+  };
+
+  useEffect(() => {
+    if (userEmail === null) {
+      return;
+    }
+
+    if (userEmail && tournamentData) {
+      if (tournamentData.userMail !== userEmail) {
+        setError("You don't have access to this tournament.");
+        setLoading(false);
+      } else {
+        setLoading(false);
+      }
+    }
+  }, [userEmail, tournamentData]);
+
+  const handleMatchLogic = async () => {
+    setLoading(true);
+    try {
       const fetchRes = await fetch(`/api/dev/tournament/${tournamentId}/brackets`);
       const fetchData = await fetchRes.json();
-  
+
       if (fetchRes.ok) {
-        // Si ya hay brackets, guardarlos y navegar
         localStorage.setItem("matchBrackets", JSON.stringify(fetchData));
         const tournamentUrl = `/bracket-tournament/${tournamentId}`;
         window.open(tournamentUrl, "_blank");
         setError(null);
       } else if (fetchData.error === "Tournament don't started yet") {
-        // Si el torneo no ha comenzado, proceder con POST para iniciarlo
+        const patchRes = await fetch(`/api/dev/tournament/status`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            tournamentId: tournamentData.tournamentId,
+            newStatus: "In Progress",
+          }),
+        });
+        
+        const patchData = await patchRes.json();    
+        if (!patchRes.ok) {
+          setError(patchData.message || "Error updating tournament status.");
+          setLoading(false);
+          return;
+        }
+        
         const startRes = await fetch(`/api/dev/tournament/${tournamentId}/start`, {
           method: "POST",
         });
         const startData = await startRes.json();
-  
+
         if (startRes.ok) {
-          console.log("Tournament started successfully.");
-          // Obtener brackets nuevamente después de iniciar el torneo
           const newFetchRes = await fetch(`/api/dev/tournament/${tournamentId}/brackets`);
           const newFetchData = await newFetchRes.json();
-  
+
           if (newFetchRes.ok) {
-            // Guardar y navegar después de iniciar
             localStorage.setItem("matchBrackets", JSON.stringify(newFetchData));
             const tournamentUrl = `/bracket-tournament/${tournamentId}`;
             window.open(tournamentUrl, "_blank");
@@ -71,31 +158,77 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
             setError(newFetchData.error || "Error fetching tournament brackets after starting.");
           }
         } else {
-          // Manejar errores al intentar iniciar el torneo
           setError(startData.error || "Error starting the tournament.");
         }
       } else {
-        // Manejar cualquier otro error en el fetch inicial
         setError(fetchData.error || "Error fetching tournament brackets.");
       }
     } catch (err) {
       setError("Error connecting to the server.");
     } finally {
-      setLoading(false); // Desactivar el indicador de carga
+      setLoading(false);
     }
   };
-  
 
   useEffect(() => {
     if (tournamentId) {
       fetchParticipants();
     }
+    fetchUserEmail();
+    getTournamentData();
   }, [tournamentId]);
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
+        <div className="flex flex-col items-center justify-center bg-white p-8 rounded-lg shadow-lg">
+          <div className="loader"></div> {Loader(250, 250)}
+          <p className="text-lg text-purple-700 mt-4">Loading, please wait...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-6">
+        <h1 className="text-3xl font-semibold text-center text-red-500">
+          {error}
+        </h1>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-6">
       <div id="google_translate_element"></div>
-      <h1 className="text-3xl font-semibold mb-6 text-center text-purple-800">Tournament Participants</h1>
+
+      {tournamentData && tournamentData.tournamentName && (
+        <h1 className="text-4xl font-bold mb-6 text-center text-purple-800">
+          {tournamentData.tournamentName}
+        </h1>
+      )}
+
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center w-full max-w-4xl mb-6 p-6 bg-indigo-100 rounded-lg shadow-xl">
+        <div className="mb-4 md:mb-0">
+          <p className="text-lg font-semibold text-gray-700">Tournament Owner:</p>
+          <p className="text-md text-gray-600">{tournamentData?.userMail}</p>
+        </div>
+
+        <div className="mb-4 md:mb-0">
+          <p className="text-lg font-semibold text-gray-700">Tournament Code:</p>
+          <p className="text-md text-gray-600">{tournamentData?.tournamentCode}</p>
+        </div>
+      </div>
+
+      <div className="mb-6 w-full max-w-4xl p-4 bg-indigo-50 rounded-lg shadow-md">
+        <div className="text-lg font-semibold text-gray-700">
+          <p><strong>Start Date:</strong> {new Date(tournamentData?.startDate).toLocaleDateString()}</p>
+          <p><strong>End Date:</strong> {new Date(tournamentData?.endDate).toLocaleDateString()}</p>
+          <p><strong>Status:</strong> {tournamentData?.status}</p>
+          <p><strong>Tags:</strong> {tournamentData?.tags}</p>
+        </div>
+      </div>
 
       <div className="flex gap-4 mb-6">
         <button
@@ -107,54 +240,52 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
         <button
           className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
           onClick={handleMatchLogic}
-          disabled={loading} // Deshabilitar el botón mientras se carga
+          disabled={loading}
         >
           Match Games
         </button>
       </div>
 
-      {error && (
-        <p className="text-red-500 text-center">{error}</p>
-      )}
-
       {participants.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 w-full max-w-4xl">
-          {participants.map((participant) => (
-            <div
-              key={participant.participantId}
-              className="bg-white rounded-lg shadow-md p-4 flex items-center justify-start gap-4"
-              style={{ height: "120px" }}
-            >
-              <div
-                className="h-16 w-16 rounded-full bg-purple-200 flex items-center justify-center text-2xl font-bold text-purple-800"
-                style={{
-                  backgroundColor: getRandomColor(),
-                }}
-              >
-                {participant.participantName.charAt(0).toUpperCase()}
-              </div>
-              <h2 className="text-md font-semibold text-gray-700">{participant.participantName}</h2>
-            </div>
-          ))}
+        <div className="overflow-x-auto w-full max-w-4xl">
+          <table className="table-auto w-full border-collapse shadow-lg rounded-lg">
+            <thead>
+              <tr className="bg-gray-200">
+                <th className="px-4 py-2 text-left text-gray-600">Participant</th>
+                <th className="px-4 py-2 text-left text-gray-600">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {participants.map((participant) => (
+                <tr key={participant.participantId} className="border-b hover:bg-gray-50">
+                  <td className="px-4 py-2 flex items-center gap-4 text-gray-700">
+                    <img
+                      src={`/static/profile/${participant.participantImage}.png`}
+                      alt={`Profile of ${participant.participantName}`}
+                      className="h-8 w-8 rounded-full"
+                    />
+                    <span>{participant.participantName}</span>
+                  </td>
+                  <td className="px-4 py-2 text-center">
+                    <button
+                      className="text-red-500 hover:text-red-700 transition-colors"
+                      onClick={() => deleteParticipant(participant.participantId)}
+                    >
+                      <FaTrashAlt size={20} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       ) : (
         <p className="text-gray-700 text-center">No participants registered yet.</p>
-      )}
-
-      {/* Pop-up de carga */}
-      {loading && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
-          <div className="flex flex-col items-center justify-center bg-white p-8 rounded-lg shadow-lg">
-            <div className="loader"></div> {Loader(250, 250)}
-            <p className="text-lg text-purple-700 mt-4">Loading, please wait...</p>
-          </div>
-        </div>
       )}
     </div>
   );
 };
 
-// Function to generate random colors for cards
 const getRandomColor = () => {
   const colors = ["#FCE38A", "#F38181", "#95E1D3", "#EAFFD0", "#B5EAEA"];
   return colors[Math.floor(Math.random() * colors.length)];

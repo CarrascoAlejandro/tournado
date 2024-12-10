@@ -6,6 +6,7 @@ interface Participant {
   participantId: number;
   participantName: string;
   tournamentId: number;
+  participantImage: number; 
 }
 
 const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
@@ -23,7 +24,7 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
 
       if (res.ok) {
         setParticipants(data.participants);
-        setError(null); // Clear any previous errors
+        setError(null); 
       } else {
         setError(data.error || "There was an error fetching the participants.");
       }
@@ -36,22 +37,22 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
 
   const handleFetchBrackets = async () => {
     try {
-      // Fetch the brackets
-      const fetchRes = await fetch(`/api/dev/tournament/${tournamentId}/brackets`);
+      const fetchRes = await fetch(
+        `/api/dev/tournament/${tournamentId}/brackets`
+      );
       const fetchData = await fetchRes.json();
 
       if (fetchRes.ok) {
-        // Save brackets and byes to localStorage
         localStorage.setItem("matchBrackets", JSON.stringify(fetchData));
 
-        // Navigate to the bracket page
         const tournamentUrl = `/bracket-tournament/${tournamentId}`;
         window.open(tournamentUrl, "_blank");
-        setMessage(null); // Clear any previous messages
+        setMessage(null);
       } else {
-        // Check for specific error message
         if (fetchData.error === "Tournament don't started yet") {
-          setMessage("Tournament hasn't started yet. Please wait for the tournament to begin.");
+          setMessage(
+            "Tournament hasn't started yet. Please wait for the tournament to begin."
+          );
         } else {
           setError(fetchData.error || "Error fetching tournament brackets.");
         }
@@ -103,14 +104,11 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
                   key={participant.participantId}
                   className="bg-white rounded-lg shadow-lg p-4 flex flex-col items-center"
                 >
-                  <div
-                    className="h-24 w-24 rounded-full bg-purple-200 flex items-center justify-center text-2xl font-bold text-purple-700"
-                    style={{
-                      backgroundColor: getRandomColor(),
-                    }}
-                  >
-                    {participant.participantName.charAt(0).toUpperCase()}
-                  </div>
+                  <img
+                    src={`/static/profile/${participant.participantImage}.png`}
+                    alt={`Profile of ${participant.participantName}`}
+                    className="h-24 w-24 rounded-full bg-gray-200"
+                  />
                   <h2 className="text-lg font-semibold mt-4 text-gray-700">
                     {participant.participantName}
                   </h2>
@@ -124,12 +122,6 @@ const ViewTournament = ({ params }: { params: { tournamentId: string } }) => {
       )}
     </div>
   );
-};
-
-// Function to generate random colors for the cards
-const getRandomColor = () => {
-  const colors = ["#FCE38A", "#F38181", "#95E1D3", "#EAFFD0", "#B5EAEA"];
-  return colors[Math.floor(Math.random() * colors.length)];
 };
 
 export default ViewTournament;
