@@ -9,6 +9,7 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { signIn } from 'next-auth/react';
+import Link from 'next/link';
 import { FaGoogle, FaGithub, FaDiscord } from 'react-icons/fa';
 
 export default function LoginPage() {
@@ -85,19 +86,13 @@ export default function LoginPage() {
 
           <p className="text-center text-gray-500 text-xs mt-4">
             By signing in, you agree to our{' '}
-            <a
-              href="#"
-              className="underline text-indigo-600 hover:text-indigo-800"
-            >
+            <Link href="/terms-of-service" className="text-[#097597] hover:underline ml-2">
               Terms of Service
-            </a>{' '}
+            </Link>{' '}
             and{' '}
-            <a
-              href="#"
-              className="underline text-indigo-600 hover:text-indigo-800"
-            >
+            <Link href="/privacy-policy" className="text-[#097597] hover:underline">
               Privacy Policy
-            </a>
+            </Link>
             .
           </p>
         </CardFooter>
